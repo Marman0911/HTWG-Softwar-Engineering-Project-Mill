@@ -12,7 +12,7 @@ the border of square_n+1 is 2x the size
 the print has to be from top to bottom 
 for refference
 
-0+--------------+--------------+
++--------------+--------------+
 |              |              |
 |    +---------+---------+    |
 |    |         |         |    |
@@ -60,4 +60,3 @@ case class MillBoard(boardSize: Int = 3):
 
   //coords
   def hCoords: Array[Char] = ('a' to 'z').toArray.take(boardSize * 2 + 1) //https://www.javathinking.com/blog/better-way-to-generate-array-of-all-letters-in-the-alphabet/
-  //hallo hier manuel
