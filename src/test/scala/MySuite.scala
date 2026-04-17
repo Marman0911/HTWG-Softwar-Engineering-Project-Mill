@@ -1,9 +1,10 @@
-// For more information on writing tests, see
-// https://scalameta.org/munit/docs/getting-started.html
-class MySuite extends munit.FunSuite {
-  test("example test that succeeds") {
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class MySuite extends AnyFlatSpec with Matchers {
+  "An example test" should "succeed" in {
     val obtained = 42
     val expected = 42
-    assertEquals(obtained, expected)
+    obtained should be(expected)
   }
 }
