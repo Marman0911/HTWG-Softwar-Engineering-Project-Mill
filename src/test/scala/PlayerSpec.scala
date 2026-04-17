@@ -1,7 +1,7 @@
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
-class PlayerSpec extends AnyWordSpec with Matchers:
+class PlayerSpec extends AnyWordSpec with Matchers{
 
   "A Player" when {
     "created with default values" should {
@@ -161,3 +161,4 @@ class PlayerSpec extends AnyWordSpec with Matchers:
       PlayerId.One should not be PlayerId.Two
     }
   }
+}

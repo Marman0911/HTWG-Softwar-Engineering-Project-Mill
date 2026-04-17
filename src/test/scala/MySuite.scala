@@ -1,7 +1,7 @@
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-class MillBoardSpec extends AnyWordSpec with Matchers: 
+class MillBoardSpec extends AnyWordSpec with Matchers{ 
   "MillBoard" should {
     "use default board size when constructed without argument" in {
       val board = MillBoard()
@@ -48,3 +48,4 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
       board.render should be(board.rows.mkString(eol))
     }
   }
+}

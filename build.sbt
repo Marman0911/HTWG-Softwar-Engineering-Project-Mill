@@ -13,5 +13,8 @@ lazy val root = project
 
     // Print test output immediately and show full-duration + detailed failures.
     Test / logBuffered := false,
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF")
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),
+
+    // Exclude Main from coverage
+    coverageExcludedFiles := ".*Main.*"
   )
