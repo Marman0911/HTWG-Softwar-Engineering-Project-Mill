@@ -9,5 +9,9 @@ lazy val root = project
     scalaVersion := scala3Version,
 
     libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.14",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.14" % "test"
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.14" % "test",
+
+    // Print test output immediately and show full-duration + detailed failures.
+    Test / logBuffered := false,
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF")
   )
