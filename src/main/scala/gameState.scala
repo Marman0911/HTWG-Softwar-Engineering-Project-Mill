@@ -7,10 +7,10 @@ enum MoveType:                           // Enum-Liste von Möglichkeiten
 
 case class BoardPosition(ring: Int, point: Int):
   require(ring >= 0 && ring < 3,
-    "ring must be between 0 and 2") // Ring 0 Innen, 1 mitte, 2 außen
+    "ring must be between 0 and 2") // Ring 0 innen, 1 mitte, 2 außen
 
-  require(require(point >= 0 && point < 8, // jedes Quadrat hat 8 Punkte 0 bis 7
-    "point must be between 0 and 7"))
+  require(point >= 0 && point < 8,
+    "point must be between 0 and 7") // jedes Quadrat hat 8 Punkte: 0 bis 7
 
 
 case class Move(                //Ein Zug besteht aus mehreren Informationen
