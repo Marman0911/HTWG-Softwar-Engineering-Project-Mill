@@ -1,5 +1,4 @@
-enum PlayerId:
-    case One, Two
+package model
 
 case class Player(
     id: PlayerId,
