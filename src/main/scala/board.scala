@@ -1,10 +1,6 @@
 /*
 Every Square has 8 connection points
-the paths to the center are always the same length
-the border of square_n+1 is 2x the size
-->playing field is 2^(n+1)
-the print has to be from top to bottom 
-for refference
+The print has to be from top to bottom
 
 +--------------+--------------+
 |              |              |
@@ -12,7 +8,7 @@ for refference
 |    |         |         |    |
 |    |    +----+----+    |    |
 |    |    |         |    |    |
-+----+----+         +----+----+...
++----+----+         +----+----+
 |    |    |         |    |    |
 |    |    +----+----+    |    |
 |    |         |         |    |
@@ -21,44 +17,62 @@ for refference
 +--------------+--------------+
 */
 
-case class MillBoard(boardSize: Int = 3):
+case class Position(ring: Int, slot: Int)
+
+object MillBoard:
+  private def emptyStones(boardSize: Int): Map[Position, Option[PlayerId]] =
+    (for
+      r <- 0 until boardSize
+      s <- 0 until 8
+    yield Position(r, s) -> None).toMap
+
+  def apply(boardSize: Int = 3): MillBoard =
+    new MillBoard(boardSize, emptyStones(boardSize))
+
+case class MillBoard private (
+    boardSize: Int,
+    stones: Map[Position, Option[PlayerId]]
+):
   private val eol          = sys.props("line.separator")
   private val intersection = "+"
   private val step         = "-"
-  private val hPath        = step * 4   // "----"
+  private val hPath        = step * 4
   private val vPath        = "|"
-  private val nml          = " " * 4    // "    " (no man's land)
+  private val nml          = " " * 4
 
-  // "+" + n×"----" + (n-1)×"-"  →  Länge = 5n Zeichen
-  // z.B. n=1: "+----", n=2: "+---------", n=3: "+--------------"
+  private def posCoords(pos: Position): (Int, Int) =
+    val n = boardSize
+    val r = pos.ring
+    pos.slot match
+      case 0 => (r * 2, 5 * r)
+      case 1 => (r * 2, 5 * n)
+      case 2 => (r * 2, 10 * n - 5 * r)
+      case 3 => (2 * n, 10 * n - 5 * r)
+      case 4 => (4 * n - r * 2, 10 * n - 5 * r)
+      case 5 => (4 * n - r * 2, 5 * n)
+      case 6 => (4 * n - r * 2, 5 * r)
+      case 7 => (2 * n, 5 * r)
+
   private def crossroad(n: Int): String =
     intersection + hPath * n + step * (n - 1)
 
-  // Zeile 2k – waagrechte Linie auf Tiefe k
-  // k äußere Rahmen  +  crossroad für verbleibende Segmente (×2)  +  Mittel-"+"
   private def horizRow(k: Int): String =
     (vPath + nml) * k +
-    crossroad(boardSize - k) * 2 + intersection +
-    (nml + vPath) * k
+      crossroad(boardSize - k) * 2 + intersection +
+      (nml + vPath) * k
 
-  // Zeile 2k+1 – senkrechte Zeile auf Tiefe k < boardSize-1
-  // Hat eine Mittel-"|", weil äußere Quadrate dort hindurchgehen
   private def vertRowOuter(k: Int): String =
-    val inner = " " * (5 * (boardSize - k) - 1) // Abstand zum Mittelpipe
+    val inner = " " * (5 * (boardSize - k) - 1)
     (vPath + nml) * k + vPath + inner + vPath + inner + vPath + (nml + vPath) * k
 
-  // Zeile 2(boardSize-1)+1 – innerstes Quadrat, KEIN Mittel-"|"
-  // Die Mitte ist leer (kein Spielfeld-Mittelpunkt bei Mühle)
   private def vertRowInner: String =
-    val gap = " " * 9 // immer 9, entspricht dem Innenraum des innersten Quadrats
+    val gap = " " * 9
     (vPath + nml) * (boardSize - 1) + vPath + gap + vPath + (nml + vPath) * (boardSize - 1)
 
-  // Mittelzeile – linker Arm + Lücke + rechter Arm (kein Mittel-"+")
-  // z.B. n=3: "+----+----+         +----+----+"
   private def middleRow: String =
     intersection + (hPath + intersection) * (boardSize - 1) +
-    " " * 9 +
-    (intersection + hPath) * (boardSize - 1) + intersection
+      " " * 9 +
+      (intersection + hPath) * (boardSize - 1) + intersection
 
   def rows: Seq[String] =
     val topHalf: Seq[String] =
@@ -66,8 +80,32 @@ case class MillBoard(boardSize: Int = 3):
         val h = horizRow(k)
         val v = if k < boardSize - 1 then vertRowOuter(k) else vertRowInner
         Seq(h, v)
-    // Obere Hälfte  +  Mitte  +  untere Hälfte (= obere gespiegelt)
+
     topHalf ++ Seq(middleRow) ++ topHalf.reverse
 
-  def render: String = rows.mkString(eol)
+  val allPositions: Seq[Position] =
+    for
+      r <- 0 until boardSize
+      s <- 0 until 8
+    yield Position(r, s)
 
+  def placeStone(pos: Position, player: PlayerId): Option[MillBoard] =
+    if stones.getOrElse(pos, None).isDefined then None
+    else Some(copy(stones = stones.updated(pos, Some(player))))
+
+  def render: String =
+    val rowsArr = rows.map(_.toCharArray)
+    stones.foreach:
+      case (pos, Some(player)) =>
+        val (row, col) = posCoords(pos)
+        rowsArr(row)(col) = if player == PlayerId.One then '1' else '2'
+      case _ => ()
+    rowsArr.map(_.mkString).mkString(eol)
+
+  def renderWithCoords: String =
+    val labeled = rows.zipWithIndex.map: (row, i) =>
+      val label = if i % 2 == 0 then s"${i / 2 + 1} " else "  "
+      label + row
+
+    val footer = "  " + (0 to 2 * boardSize).map(i => ('a' + i).toChar).mkString("    ")
+    (labeled :+ footer).mkString(eol)

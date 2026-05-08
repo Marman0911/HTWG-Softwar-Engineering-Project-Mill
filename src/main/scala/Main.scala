@@ -17,7 +17,7 @@
   println("Welcome to Nine Men's Morris!")
   println()
 
-  println(board.render)
+  println(board.renderWithCoords)
   println()
 
   println(s"Player 1 stones in hand: ${player1.stonesInHand}")
