@@ -4,8 +4,9 @@
     println(s"Board Size")
     println(board.render)
     println()
-    */
-    import scala.io.StdIn.readLine
+*/
+
+import scala.io.StdIn.readLine
 
 @main def millGame(): Unit =
 
@@ -24,27 +25,22 @@
   println(s"Player 2 stones in hand: ${player2.stonesInHand}")
   println()
 
-  print("Player 1 enter position as: ring slot, example 0 3: ")
+  val view = BoardView()
+
+  print("Player 1 enter position (e.g. a1, 1a, A1): ")
   val input = readLine()
 
-  val parts = input.split(" ")
-
-  if parts.length == 2 then
-    val ring = parts(0).toInt
-    val slot = parts(1).toInt
-
-    val pos = Position(ring, slot)
-
-    board.placeStone(pos, PlayerId.One) match
-      case Some(newBoard) =>
-        board = newBoard
-        println()
-        println("Stone placed!")
-        println()
-        println(BoardView().renderWithCoords(board))
-
-      case None =>
-        println()
-        println("This position is already occupied.")
-  else
-    println("Invalid input. Please enter two numbers, for example: 0 3")
+  view.parseInput(input, board) match
+    case None =>
+      println("Invalid position. Use letter (a-g) and number (1-7), e.g. a1 or 1a.")
+    case Some(pos) =>
+      board.placeStone(pos, PlayerId.One) match
+        case Some(newBoard) =>
+          board = newBoard
+          println()
+          println("Stone placed!")
+          println()
+          println(view.renderWithCoords(board))
+        case None =>
+          println()
+          println("This position is already occupied.")
