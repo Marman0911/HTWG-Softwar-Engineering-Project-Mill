@@ -40,7 +40,7 @@ case class MillBoard private (
   private val vPath        = "|"
   private val nml          = " " * 4
 
-  private def posCoords(pos: Position): (Int, Int) =
+  def posCoords(pos: Position): (Int, Int) =
     val n = boardSize
     val r = pos.ring
     pos.slot match
