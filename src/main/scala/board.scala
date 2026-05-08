@@ -92,20 +92,3 @@ case class MillBoard private (
   def placeStone(pos: Position, player: PlayerId): Option[MillBoard] =
     if stones.getOrElse(pos, None).isDefined then None
     else Some(copy(stones = stones.updated(pos, Some(player))))
-
-  def render: String =
-    val rowsArr = rows.map(_.toCharArray)
-    stones.foreach:
-      case (pos, Some(player)) =>
-        val (row, col) = posCoords(pos)
-        rowsArr(row)(col) = if player == PlayerId.One then '1' else '2'
-      case _ => ()
-    rowsArr.map(_.mkString).mkString(eol)
-
-  def renderWithCoords: String =
-    val labeled = rows.zipWithIndex.map: (row, i) =>
-      val label = if i % 2 == 0 then s"${i / 2 + 1} " else "  "
-      label + row
-
-    val footer = "  " + (0 to 2 * boardSize).map(i => ('a' + i).toChar).mkString("    ")
-    (labeled :+ footer).mkString(eol)
