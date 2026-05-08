@@ -16,7 +16,8 @@
 
   println("Welcome to Nine Men's Morris!")
   println()
-  println(board.renderWithCoords)
+
+  println(BoardView().renderWithCoords(board))
   println()
 
   println(s"Player 1 stones in hand: ${player1.stonesInHand}")
@@ -40,7 +41,7 @@
         println()
         println("Stone placed!")
         println()
-        println(board.render)
+        println(BoardView().renderWithCoords(board))
 
       case None =>
         println()
