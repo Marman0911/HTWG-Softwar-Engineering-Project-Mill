@@ -3,11 +3,13 @@ class BoardView:
 
   private def stoneRows(board: MillBoard): Seq[String] =
     val rowsArr = board.rows.map(_.toCharArray)
+
     board.stones.foreach:
       case (pos, Some(player)) =>
         val (row, col) = board.posCoords(pos)
         rowsArr(row)(col) = if player == PlayerId.One then '1' else '2'
       case _ => ()
+<<<<<<< HEAD
     rowsArr.map(_.mkString)
 
   def render(board: MillBoard): String =
@@ -15,10 +17,21 @@ class BoardView:
 
   def renderWithCoords(board: MillBoard): String =
     val labeled = stoneRows(board).zipWithIndex.map: (row, i) =>
+=======
+
+    rowsArr.map(_.mkString).mkString(eol)
+
+  def renderWithCoords(board: MillBoard): String =
+    val renderedRows = render(board).split(eol).toSeq
+
+    val labeled = renderedRows.zipWithIndex.map: (row, i) =>
+>>>>>>> 057b45c (test)
       val label = if i % 2 == 0 then s"${i / 2 + 1} " else "  "
       label + row
+
     val footer = "  " + (0 to 2 * board.boardSize)
       .map(i => ('a' + i).toChar).mkString("    ")
+<<<<<<< HEAD
     (labeled :+ footer).mkString(eol)
 
   private def reverseCoords(board: MillBoard): Map[(Int, Int), Position] =
@@ -39,3 +52,7 @@ class BoardView:
             || rowNum < 1 || rowNum > 2 * board.boardSize + 1
           then None
           else reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
+=======
+
+    (labeled :+ footer).mkString(eol)
+>>>>>>> 057b45c (test)
