@@ -26,9 +26,12 @@ object MillBoard:
       s <- 0 until 8
     yield Position(r, s) -> None).toMap
 
-case class MillBoard(
-    boardSize: Int = 3,
-    stones: Map[Position, Option[PlayerId]] = MillBoard.emptyStones(boardSize)
+  def apply(boardSize: Int = 3): MillBoard =
+    new MillBoard(boardSize, emptyStones(boardSize))
+
+case class MillBoard private (
+    boardSize: Int,
+    stones: Map[Position, Option[PlayerId]]
 ):
   private val eol          = sys.props("line.separator")
   private val intersection = "+"
