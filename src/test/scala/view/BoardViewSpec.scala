@@ -8,6 +8,30 @@ class BoardViewSpec extends AnyWordSpec with Matchers:
 
   "BoardView" should {
 
+    "print next player 1 when current player is one" in {
+      val state = GameState(MillBoard(), Player(PlayerId.One), Player(PlayerId.Two), PlayerId.One)
+      val view = BoardView()
+
+      val out = new java.io.ByteArrayOutputStream()
+      Console.withOut(out) {
+        view.update(state)
+      }
+
+      out.toString should include("Next: Player 1")
+    }
+
+    "print next player 2 when current player is two" in {
+      val state = GameState(MillBoard(), Player(PlayerId.One), Player(PlayerId.Two), PlayerId.Two)
+      val view = BoardView()
+
+      val out = new java.io.ByteArrayOutputStream()
+      Console.withOut(out) {
+        view.update(state)
+      }
+
+      out.toString should include("Next: Player 2")
+    }
+
     "render board rows joined by system line separator" in {
       val board = MillBoard(3)
       val eol = sys.props("line.separator")

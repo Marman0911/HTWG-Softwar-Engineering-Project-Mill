@@ -38,6 +38,20 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
       board.allPositions.length should be(24)
     }
 
+    "map all slots to coordinates" in {
+      val board = MillBoard(3)
+      val ring = 1
+
+      board.posCoords(Position(ring, 0)) should be((2, 5))
+      board.posCoords(Position(ring, 1)) should be((2, 15))
+      board.posCoords(Position(ring, 2)) should be((2, 25))
+      board.posCoords(Position(ring, 3)) should be((6, 25))
+      board.posCoords(Position(ring, 4)) should be((10, 25))
+      board.posCoords(Position(ring, 5)) should be((10, 15))
+      board.posCoords(Position(ring, 6)) should be((10, 5))
+      board.posCoords(Position(ring, 7)) should be((6, 5))
+    }
+
     "place a stone on an empty position" in {
       val board = MillBoard()
       val pos = Position(0, 0)

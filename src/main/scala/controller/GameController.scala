@@ -5,10 +5,10 @@ import view.*
 import scala.io.StdIn.readLine
 
 object GameController:
-  private def reverseCoords(board: MillBoard): Map[(Int, Int), Position] =
+  private[controller] def reverseCoords(board: MillBoard): Map[(Int, Int), Position] =
     board.allPositions.map(pos => board.posCoords(pos) -> pos).toMap
 
-  private def parseInput(input: String, board: MillBoard): Option[Position] =
+  private[controller] def parseInput(input: String, board: MillBoard): Option[Position] =
     val clean = input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
     if clean.length < 2 then None
     else
@@ -25,6 +25,25 @@ object GameController:
           then None
           else reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
 
+  private[controller] def handleTurnInput(state: GameState, input: String, view: BoardView): (GameState, Seq[String]) =
+    parseInput(input, state.board) match
+      case None =>
+        (state, Seq("Invalid position."))
+      case Some(pos) =>
+        state.placeStone(pos) match
+          case None =>
+            (state, Seq("Position occupied."))
+          case Some(nextState) =>
+            // New immutable state instances do not carry observer registrations.
+            nextState.addObserver(view)
+            (
+              nextState,
+              Seq(
+                view.renderWithCoords(nextState.board),
+                s"Next: Player ${if nextState.currentPlayer == PlayerId.One then "1" else "2"}"
+              )
+            )
+
   def start(): Unit =
     val view = BoardView()
     var state = GameState()
@@ -36,15 +55,6 @@ object GameController:
     while !state.player1.hasLost && !state.player2.hasLost do
       print(s"Player ${if state.currentPlayer == PlayerId.One then "1" else "2"} enter position (e.g. a1): ")
       val input = readLine()
-      parseInput(input, state.board) match
-        case None =>
-          println("Invalid position.")
-        case Some(pos) =>
-          state.placeStone(pos) match
-            case None    => println("Position occupied.")
-            case Some(s) =>
-              state = s
-              // New immutable state instances do not carry observer registrations.
-              state.addObserver(view)
-              println(view.renderWithCoords(state.board))
-              println(s"Next: Player ${if state.currentPlayer == PlayerId.One then "1" else "2"}")
+      val (nextState, outputLines) = handleTurnInput(state, input, view)
+      state = nextState
+      outputLines.foreach(println)

@@ -28,6 +28,20 @@ class GameStateSpec extends AnyWordSpec with Matchers:
       next.get.currentPlayerObj should be(next.get.player2)
     }
 
+    "switch from player two back to player one" in {
+      val state = GameState()
+
+      val afterFirstMove = state.placeStone(Position(0, 0)).get
+      afterFirstMove.currentPlayer should be(PlayerId.Two)
+
+      val afterSecondMove = afterFirstMove.placeStone(Position(0, 1))
+
+      afterSecondMove shouldBe defined
+      afterSecondMove.get.board.stones(Position(0, 1)) should be(Some(PlayerId.Two))
+      afterSecondMove.get.currentPlayer should be(PlayerId.One)
+      afterSecondMove.get.currentPlayerObj should be(afterSecondMove.get.player1)
+    }
+
     "reject placing on occupied positions" in {
       val state = GameState()
       val pos = Position(0, 0)
