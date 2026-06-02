@@ -4,6 +4,8 @@ import model.*
 import view.BoardView
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
 class GameControllerSpec extends AnyWordSpec with Matchers:
 
@@ -17,6 +19,11 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
     "parse number-letter coordinate order" in {
       val board = MillBoard(3)
       GameController.parseInput("1a", board) should be(Some(Position(0, 0)))
+    }
+
+    "accept boundary coordinate g7" in {
+      val board = MillBoard(3)
+      GameController.parseInput("g7", board) should be(Some(Position(0, 4)))
     }
 
     "sanitize whitespace and symbols" in {
@@ -46,9 +53,67 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
       GameController.parseInput("a9", board) should be(None)
     }
 
+    "reject the immediate row boundaries around the valid range" in {
+      val board = MillBoard(3)
+
+      GameController.parseInput("d0", board) should be(None)
+      GameController.parseInput("d8", board) should be(None)
+    }
+
+    "reject the immediate column boundary above the valid range" in {
+      val board = MillBoard(3)
+
+      GameController.parseInput("h4", board) should be(None)
+    }
+
+    "accept exact board boundaries" in {
+      val board = MillBoard(3)
+
+      GameController.parseInput("a7", board) should be(Some(Position(0, 6)))
+      GameController.parseInput("g1", board) should be(Some(Position(0, 2)))
+    }
+
     "return None for coordinates that are not board intersections" in {
       val board = MillBoard(3)
       GameController.parseInput("b1", board) should be(None)
+    }
+  }
+
+  "GameController.promptFor" should {
+
+    "render player one prompt" in {
+      GameController.promptFor(PlayerId.One) should be("Player 1 enter position (e.g. a1): ")
+    }
+
+    "render player two prompt" in {
+      GameController.promptFor(PlayerId.Two) should be("Player 2 enter position (e.g. a1): ")
+    }
+  }
+
+  "GameController.welcomeMessage" should {
+
+    "contain the expected title" in {
+      GameController.welcomeMessage should be("Welcome to Nine Men's Morris!")
+    }
+  }
+
+  "GameController.shouldContinue" should {
+
+    "be true while both players have not lost" in {
+      val state = GameState(MillBoard(), Player(PlayerId.One), Player(PlayerId.Two), PlayerId.One)
+      GameController.shouldContinue(state) should be(true)
+    }
+
+    "be false when player one has lost" in {
+      val lostP1 = Player(PlayerId.One, stonesInHand = 2, stonesOnBoard = 0)
+      val state = GameState(MillBoard(), lostP1, Player(PlayerId.Two), PlayerId.One)
+      GameController.shouldContinue(state) should be(false)
+    }
+
+    "be false when player two has lost" in {
+      val lostP2 = Player(PlayerId.Two, stonesInHand = 2, stonesOnBoard = 0)
+      val state = GameState(MillBoard(), Player(PlayerId.One), lostP2, PlayerId.One)
+      GameController.shouldContinue(state) should be(false)
     }
   }
 
@@ -108,5 +173,25 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
 
       nextState.currentPlayer should be(PlayerId.One)
       messages(1) should be("Next: Player 1")
+    }
+  }
+
+  "GameController.start" should {
+
+    "enter the game loop while both players are active" in {
+      val in = ByteArrayInputStream(Array.emptyByteArray)
+      val out = ByteArrayOutputStream()
+
+      assertThrows[NullPointerException] {
+        Console.withIn(in) {
+          Console.withOut(out) {
+            GameController.start()
+          }
+        }
+      }
+
+      val printed = out.toString("UTF-8")
+      printed should include("Welcome to Nine Men's Morris!")
+      printed should include("Player 1 enter position (e.g. a1):")
     }
   }

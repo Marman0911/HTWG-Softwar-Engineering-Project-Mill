@@ -27,6 +27,18 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
       )
     }
 
+    "create the expected key rows for size three" in {
+      val board = MillBoard(3)
+
+      board.rows(0) should be("+--------------+--------------+")
+      board.rows(1) should be("|              |              |")
+      board.rows(2) should be("|    +---------+---------+    |")
+      board.rows(3) should be("|    |         |         |    |")
+      board.rows(4) should be("|    |    +----+----+    |    |")
+      board.rows(5) should be("|    |    |         |    |    |")
+      board.rows(6) should be("+----+----+         +----+----+")
+    }
+
     "build a mirrored shape around the middle row" in {
       val board = MillBoard(3)
       board.rows should be(board.rows.reverse)

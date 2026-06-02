@@ -44,17 +44,22 @@ class BoardViewSpec extends AnyWordSpec with Matchers:
         .placeStone(Position(0, 0), PlayerId.One).get
         .placeStone(Position(0, 2), PlayerId.Two).get
 
-      val rendered = BoardView().render(board)
-      rendered should include("1")
-      rendered should include("2")
+      val eol = sys.props("line.separator")
+      val rows = BoardView().render(board).split(eol).toSeq
+
+      rows(0).charAt(0) should be('1')
+      rows(0).charAt(30) should be('2')
     }
 
-    "render coordinate footer" in {
+    "render coordinate labels and footer" in {
       val board = MillBoard(3)
-      val rendered = BoardView().renderWithCoords(board)
+      val eol = sys.props("line.separator")
+      val renderedRows = BoardView().renderWithCoords(board).split(eol).toSeq
+      val expectedFooter = "  a    b    c    d    e    f    g"
 
-      rendered should include("a")
-      rendered should include("d")
-      rendered should include("g")
+      renderedRows(0).take(2) should be("1 ")
+      renderedRows(1).take(2) should be("  ")
+      renderedRows(2).take(2) should be("2 ")
+      renderedRows.last should be(expectedFooter)
     }
   }
