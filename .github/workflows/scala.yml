@@ -26,9 +26,21 @@ jobs:
 
       - name: Run tests with coverage
         run: sbt clean coverage test coverageReport
+
+      - name: Resolve coverage report path
+        run: |
+          COVERAGE_FILE=$(find target -type f -path "*/coverage-report/cobertura.xml" | head -n 1)
+          if [ -z "$COVERAGE_FILE" ]; then
+            echo "No cobertura.xml found under target/."
+            find target -maxdepth 4 -type f | sort
+            exit 1
+          fi
+          echo "Using coverage file: $COVERAGE_FILE"
+          echo "COVERAGE_FILE=$COVERAGE_FILE" >> "$GITHUB_ENV"
+
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/scala-2.12/coverage-report/cobertura.xml
+          file: ${{ env.COVERAGE_FILE }}
           format: cobertura
