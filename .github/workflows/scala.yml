@@ -26,9 +26,9 @@ jobs:
 
       - name: Run tests with coverage
         run: sbt clean coverage test coverageReport
-
       - name: Upload coverage to Coveralls
-        if: ${{ secrets.COVERALLS_REPO_TOKEN != '' }}
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-        run: sbt coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/scala-2.12/coverage-report/cobertura.xml
+          format: cobertura
