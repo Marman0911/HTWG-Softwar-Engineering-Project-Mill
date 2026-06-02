@@ -41,6 +41,13 @@ jobs:
           echo "Using coverage file: $COVERAGE_FILE"
           echo "COVERAGE_FILE=$COVERAGE_FILE" >> "$GITHUB_ENV"
 
+      - name: Normalize coverage paths for Coveralls
+        run: |
+          NORMALIZED_COVERAGE_FILE=target/coveralls-cobertura.xml
+          perl -pe 's@filename="(?!src/)([^"]+)"@filename="src/main/scala/$1"@g; s@\\@/@g' "$COVERAGE_FILE" > "$NORMALIZED_COVERAGE_FILE"
+          echo "Normalized coverage file: $NORMALIZED_COVERAGE_FILE"
+          echo "COVERAGE_FILE=$NORMALIZED_COVERAGE_FILE" >> "$GITHUB_ENV"
+
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
