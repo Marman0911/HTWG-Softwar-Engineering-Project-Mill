@@ -1,11 +1,12 @@
 package controller
 
-import model.*
-import view.BoardView
+import model.GameState
+import model.MillBoard
+import model.Player
+import model.PlayerId
+import model.Position
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 
 class GameControllerSpec extends AnyWordSpec with Matchers:
 
@@ -131,67 +132,41 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
 
   "GameController.handleTurnInput" should {
 
-    "keep state and return invalid message for invalid input" in {
+    "return invalid message for invalid input" in {
       val state = GameState()
-      val view = BoardView()
 
-      val (nextState, messages) = GameController.handleTurnInput(state, "xx", view)
+      val result = GameController.handleTurnInput(state, "xx")
 
-      nextState should be(state)
-      messages should be(Seq("Invalid position."))
+      result should be(Left("Invalid position."))
     }
 
-    "keep state and return occupied message for occupied position" in {
-      val view = BoardView()
+    "return occupied message for occupied position" in {
       val state = GameState().placeStone(Position(0, 0)).get
 
-      val (nextState, messages) = GameController.handleTurnInput(state, "a1", view)
+      val result = GameController.handleTurnInput(state, "a1")
 
-      nextState should be(state)
-      messages should be(Seq("Position occupied."))
+      result should be(Left("Position occupied."))
     }
 
-    "advance state and print next player after a valid move" in {
+    "advance state after a valid move" in {
       val state = GameState()
-      val view = BoardView()
 
-      val (nextState, messages) = GameController.handleTurnInput(state, "a1", view)
+      val result = GameController.handleTurnInput(state, "a1")
+      result shouldBe a[Right[?, ?]]
+      val nextState = result.toOption.get
 
       nextState should not be state
       nextState.board.stones(Position(0, 0)) should be(Some(PlayerId.One))
       nextState.currentPlayer should be(PlayerId.Two)
-      messages.size should be(2)
-      messages.head should include("+")
-      messages(1) should be("Next: Player 2")
     }
 
-    "output next player one when current player was two" in {
-      val view = BoardView()
+    "switch to player one when current player was two" in {
       val state = GameState().placeStone(Position(0, 0)).get
 
-      val (nextState, messages) = GameController.handleTurnInput(state, "d1", view)
+      val result = GameController.handleTurnInput(state, "d1")
+      result shouldBe a[Right[?, ?]]
+      val nextState = result.toOption.get
 
       nextState.currentPlayer should be(PlayerId.One)
-      messages(1) should be("Next: Player 1")
-    }
-  }
-
-  "GameController.start" should {
-
-    "enter the game loop while both players are active" in {
-      val in = ByteArrayInputStream(Array.emptyByteArray)
-      val out = ByteArrayOutputStream()
-
-      assertThrows[NullPointerException] {
-        Console.withIn(in) {
-          Console.withOut(out) {
-            GameController.start()
-          }
-        }
-      }
-
-      val printed = out.toString("UTF-8")
-      printed should include("Welcome to Nine Men's Morris!")
-      printed should include("Player 1 enter position (e.g. a1):")
     }
   }

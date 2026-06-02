@@ -1,7 +1,9 @@
 package controller
-import model.*
-import view.*
-import scala.io.StdIn.readLine
+import model.GameState
+import model.MillBoard
+import model.PlayerId
+import model.Position
+
 object GameController:
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
@@ -23,32 +25,13 @@ object GameController:
         case None => None
         case Some(rowNum) =>
           reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
-  private[controller] def handleTurnInput(state: GameState, input: String, view: BoardView): (GameState, Seq[String]) =
+  private[controller] def handleTurnInput(state: GameState, input: String): Either[String, GameState] =
     parseInput(input, state.board) match
       case None =>
-        (state, Seq("Invalid position."))
+        Left("Invalid position.")
       case Some(pos) =>
         state.placeStone(pos) match
           case None =>
-            (state, Seq("Position occupied."))
+            Left("Position occupied.")
           case Some(nextState) =>
-            nextState.addObserver(view)
-            (
-              nextState,
-              Seq(
-                view.renderWithCoords(nextState.board),
-                s"Next: Player ${if nextState.currentPlayer == PlayerId.One then "1" else "2"}"
-              )
-            )
-  def start(): Unit =
-    val view = BoardView()
-    var state = GameState()
-    state.addObserver(view)
-    println(welcomeMessage)
-    println(view.renderWithCoords(state.board))
-    while shouldContinue(state) do
-      print(promptFor(state.currentPlayer))
-      val input = readLine()
-      val (nextState, outputLines) = handleTurnInput(state, input, view)
-      state = nextState
-      outputLines.foreach(println)
+            Right(nextState)

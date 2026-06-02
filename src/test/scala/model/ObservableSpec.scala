@@ -13,7 +13,12 @@ class ObservableSpec extends AnyWordSpec with Matchers:
       updateCalls = updateCalls + 1
       lastState = Some(state)
 
-  private class TestObservable extends Observable
+  private case class TestObservable(observers: List[Observer] = List.empty) extends Observable[TestObservable]:
+    def addObserver(o: Observer): TestObservable =
+      copy(observers = o :: observers)
+
+    def trigger(state: GameState): Unit =
+      notifyObservers(state)
 
   "Observable" should {
 
@@ -22,8 +27,8 @@ class ObservableSpec extends AnyWordSpec with Matchers:
       val observer = RecordingObserver()
       val state = GameState()
 
-      observable.addObserver(observer)
-      observable.notifyObservers(state)
+      val withObserver = observable.addObserver(observer)
+      withObserver.trigger(state)
 
       observer.updateCalls should be(1)
       observer.lastState should be(Some(state))
@@ -35,9 +40,10 @@ class ObservableSpec extends AnyWordSpec with Matchers:
       val observer2 = RecordingObserver()
       val state = GameState()
 
-      observable.addObserver(observer1)
-      observable.addObserver(observer2)
-      observable.notifyObservers(state)
+      val withObservers = observable
+        .addObserver(observer1)
+        .addObserver(observer2)
+      withObservers.trigger(state)
 
       observer1.updateCalls should be(1)
       observer2.updateCalls should be(1)

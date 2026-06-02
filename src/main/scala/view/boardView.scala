@@ -1,6 +1,9 @@
 package view
 
-import model.*
+import model.GameState
+import model.MillBoard
+import model.Observer
+import model.PlayerId
 
 class BoardView extends Observer:
   private val eol = sys.props("line.separator")
