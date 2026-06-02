@@ -1,11 +1,13 @@
 ﻿# HTWG-Software-Engineering-Project: Mill
 
+[![Scala CI](https://github.com/Marman0911/HTWG-Softwar-Engineering-Project-Mill/actions/workflows/scala.yml/badge.svg?branch=main)](https://github.com/Marman0911/HTWG-Softwar-Engineering-Project-Mill/actions/workflows/scala.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill/badge.svg?branch=main&service=github)](https://coveralls.io/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill?branch=main)
+
 2026-04-17 - Abgabe 4 Plan:
 
 Code: @Marin
 Test: @Manuel 
 
-[![Coverage Status](https://coveralls.io/repos/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill/badge.svg?branch=main)](https://coveralls.io/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill?branch=main)
 ---
 
 ## Was noch fehlt
