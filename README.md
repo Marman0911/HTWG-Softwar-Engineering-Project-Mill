@@ -5,6 +5,8 @@
 Code: @Marin
 Test: @Manuel 
 
+[![Coverage Status](https://coveralls.io/repos/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill/badge.svg?branch=main)](https://coveralls.io/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill?branch=main)
+
 Read [](file:///c%3A/Users/Manuel/Desktop/HTWG/AIN/02-Hauptstudium/03-Semester/SE/Aufgaben/millbc/src/main/scala/board.scala)
 
 Read [](file:///c%3A/Users/Manuel/Desktop/HTWG/AIN/02-Hauptstudium/03-Semester/SE/Aufgaben/millbc/src/main/scala/Main.scala)
