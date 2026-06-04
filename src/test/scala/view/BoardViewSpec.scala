@@ -51,6 +51,18 @@ class BoardViewSpec extends AnyWordSpec with Matchers:
       rows(0).charAt(30) should be('2')
     }
 
+    "render stones with letter strategy" in {
+      val board = MillBoard()
+        .placeStone(Position(0, 0), PlayerId.One).get
+        .placeStone(Position(0, 2), PlayerId.Two).get
+
+      val eol = sys.props("line.separator")
+      val rows = BoardView(LetterStoneSymbols).render(board).split(eol).toSeq
+
+      rows(0).charAt(0) should be('X')
+      rows(0).charAt(30) should be('O')
+    }
+
     "render coordinate labels and footer" in {
       val board = MillBoard(3)
       val eol = sys.props("line.separator")

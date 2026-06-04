@@ -17,13 +17,23 @@ case class GameState(
   def currentPlayerObj: Player =
     if currentPlayer == PlayerId.One then player1 else player2
 
+  private def nextPlayer: PlayerId =
+    if currentPlayer == PlayerId.One then PlayerId.Two else PlayerId.One
+
   def placeStone(pos: Position): Option[GameState] =
     board.placeStone(pos, currentPlayer).map: newBoard =>
-      val next = if currentPlayer == PlayerId.One then PlayerId.Two else PlayerId.One
-      val newState = copy(board = newBoard, currentPlayer = next, observers = observers)
+      val newState = copy(
+        board = newBoard,
+        currentPlayer = nextPlayer,
+        observers = observers
+      )
       newState.notifyObservers(newState)
       newState
 
 object GameState:
   def apply(): GameState =
-    GameState(MillBoard(), Player(PlayerId.One), Player(PlayerId.Two))
+    GameState(
+      MillBoard(),
+      PlayerFactory.create(PlayerId.One),
+      PlayerFactory.create(PlayerId.Two)
+    )

@@ -5,7 +5,7 @@ import model.MillBoard
 import model.Observer
 import model.PlayerId
 
-class BoardView extends Observer:
+class BoardView(symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends Observer:
   private val eol = sys.props("line.separator")
 
   def update(state: GameState): Unit =
@@ -17,7 +17,7 @@ class BoardView extends Observer:
     board.stones.foreach:
       case (pos, Some(player)) =>
         val (row, col) = board.posCoords(pos)
-        rowsArr(row)(col) = if player == PlayerId.One then '1' else '2'
+        rowsArr(row)(col) = symbolStrategy.symbol(player)
       case _ => ()
     rowsArr.map(_.mkString)
 
@@ -28,6 +28,8 @@ class BoardView extends Observer:
     val labeled = stoneRows(board).zipWithIndex.map: (row, i) =>
       val label = if i % 2 == 0 then s"${i / 2 + 1} " else "  "
       label + row
+
     val footer = "  " + (0 to 2 * board.boardSize)
       .map(i => ('a' + i).toChar).mkString("    ")
+
     (labeled :+ footer).mkString(eol)
