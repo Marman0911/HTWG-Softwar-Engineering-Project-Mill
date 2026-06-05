@@ -1,35 +1,27 @@
 package view
 
-import model.GameState
-import model.MillBoard
-import model.Observer
-import model.PlayerId
-
-class BoardView(symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends Observer:
+class BoardView(symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols):
   private val eol = sys.props("line.separator")
 
-  def update(state: GameState): Unit =
-    println(renderWithCoords(state.board))
-    println(s"Next: Player ${if state.currentPlayer == PlayerId.One then "1" else "2"}")
+  def update(viewModel: BoardViewModel): Unit =
+    println(renderWithCoords(viewModel))
+    println(s"Next: Player ${viewModel.nextPlayerNumber}")
 
-  private def stoneRows(board: MillBoard): Seq[String] =
-    val rowsArr = board.rows.map(_.toCharArray)
-    board.stones.foreach:
-      case (pos, Some(player)) =>
-        val (row, col) = board.posCoords(pos)
-        rowsArr(row)(col) = symbolStrategy.symbol(player)
-      case _ => ()
+  private def stoneRows(viewModel: BoardViewModel): Seq[String] =
+    val rowsArr = viewModel.rows.map(_.toCharArray)
+    viewModel.stones.foreach: stone =>
+      rowsArr(stone.row)(stone.col) = symbolStrategy.symbol(stone.playerNumber)
     rowsArr.map(_.mkString)
 
-  def render(board: MillBoard): String =
-    stoneRows(board).mkString(eol)
+  def render(viewModel: BoardViewModel): String =
+    stoneRows(viewModel).mkString(eol)
 
-  def renderWithCoords(board: MillBoard): String =
-    val labeled = stoneRows(board).zipWithIndex.map: (row, i) =>
+  def renderWithCoords(viewModel: BoardViewModel): String =
+    val labeled = stoneRows(viewModel).zipWithIndex.map: (row, i) =>
       val label = if i % 2 == 0 then s"${i / 2 + 1} " else "  "
       label + row
 
-    val footer = "  " + (0 to 2 * board.boardSize)
+    val footer = "  " + (0 to 2 * viewModel.boardSize)
       .map(i => ('a' + i).toChar).mkString("    ")
 
     (labeled :+ footer).mkString(eol)

@@ -7,12 +7,8 @@ case class GameState(
   board: MillBoard,
   player1: Player,
   player2: Player,
-  currentPlayer: PlayerId = PlayerId.One,
-  observers: List[Observer] = List.empty
-) extends Observable[GameState]:
-
-  def addObserver(o: Observer): GameState =
-    copy(observers = o :: observers)
+  currentPlayer: PlayerId = PlayerId.One
+):
 
   def currentPlayerObj: Player =
     if currentPlayer == PlayerId.One then player1 else player2
@@ -22,13 +18,10 @@ case class GameState(
 
   def placeStone(pos: Position): Option[GameState] =
     board.placeStone(pos, currentPlayer).map: newBoard =>
-      val newState = copy(
+      copy(
         board = newBoard,
-        currentPlayer = nextPlayer,
-        observers = observers
+        currentPlayer = nextPlayer
       )
-      newState.notifyObservers(newState)
-      newState
 
 object GameState:
   def apply(): GameState =

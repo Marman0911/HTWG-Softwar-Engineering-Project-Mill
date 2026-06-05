@@ -180,6 +180,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
       var inputCalled = false
       var promptCalled = false
       var lineCalled = false
+      var renderCalled = false
 
       val result = runGameLoop(
         terminalState,
@@ -187,13 +188,15 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
           inputCalled = true
           "a1",
         _ => promptCalled = true,
-        _ => lineCalled = true
+        _ => lineCalled = true,
+        _ => renderCalled = true
       )
 
       result should be(terminalState)
       inputCalled should be(false)
       promptCalled should be(false)
       lineCalled should be(false)
+      renderCalled should be(false)
     }
 
     "evaluate continue condition before the turn loop" in {
@@ -203,6 +206,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
         runGameLoop(
           state,
           () => throw new RuntimeException("stop-loop"),
+          _ => (),
           _ => (),
           _ => ()
         )

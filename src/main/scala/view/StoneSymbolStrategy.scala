@@ -2,15 +2,13 @@ package view
 
 //Strategy Plattern weil Darstellungsart der Steine ausgetauscht werden können.
 
-import model.PlayerId
-
 trait StoneSymbolStrategy:
-  def symbol(player: PlayerId): Char
+  def symbol(playerNumber: Int): Char
 
 object NumberStoneSymbols extends StoneSymbolStrategy:
-  def symbol(player: PlayerId): Char =
-    if player == PlayerId.One then '1' else '2'
+  def symbol(playerNumber: Int): Char =
+    if playerNumber == 1 then '1' else '2'
 
 object LetterStoneSymbols extends StoneSymbolStrategy:
-  def symbol(player: PlayerId): Char =
-    if player == PlayerId.One then 'X' else 'O'
+  def symbol(playerNumber: Int): Char =
+    if playerNumber == 1 then 'X' else 'O'
