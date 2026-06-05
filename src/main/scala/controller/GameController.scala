@@ -4,8 +4,49 @@ import model.GameState
 import model.MillBoard
 import model.PlayerId
 import model.Position
+import view.BoardViewMapper
+import view.BoardViewModel
+import view.GameMessages
+
+trait GameObserver:
+  def update(viewModel: BoardViewModel): Unit
 
 object GameController:
+
+  private var observers: List[GameObserver] = List.empty
+
+  def addObserver(observer: GameObserver): Unit =
+    observers = observer :: observers
+
+  def removeObserver(observer: GameObserver): Unit =
+    observers = observers.filterNot(_ eq observer)
+
+  private[controller] def clearObservers(): Unit =
+    observers = List.empty
+
+  private def notifyObservers(state: GameState): Unit =
+    val viewModel = BoardViewMapper.toViewModel(state)
+    observers.foreach(_.update(viewModel))
+
+  def runGameLoop(
+    state: GameState,
+    readInput: () => String,
+    promptOut: String => Unit,
+    lineOut: String => Unit
+  ): GameState =
+    if shouldContinue(state) then
+      promptOut(promptFor(state.currentPlayer))
+      val input = readInput()
+
+      handleTurnInput(state, input) match
+        case Left(message) =>
+          lineOut(message)
+          runGameLoop(state, readInput, promptOut, lineOut)
+        case Right(nextState) =>
+          notifyObservers(nextState)
+          runGameLoop(nextState, readInput, promptOut, lineOut)
+    else
+      state
 
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
@@ -13,7 +54,7 @@ object GameController:
   private[controller] def promptFor(player: PlayerId): String =
     GameMessages.promptFor(player)
 
-  private[controller] def welcomeMessage: String =
+  def welcomeMessage: String =
     GameMessages.welcomeMessage
 
   private[controller] def reverseCoords(board: MillBoard): Map[(Int, Int), Position] =

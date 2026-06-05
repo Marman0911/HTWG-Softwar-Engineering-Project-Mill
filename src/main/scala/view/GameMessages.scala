@@ -1,6 +1,4 @@
-package controller
-
-//das ist Singleton - object existiert nur einmal 
+package view
 
 import model.PlayerId
 

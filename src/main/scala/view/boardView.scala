@@ -1,6 +1,8 @@
 package view
 
-class BoardView(symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols):
+import controller.GameObserver
+
+class BoardView(symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends GameObserver:
   private val eol = sys.props("line.separator")
 
   def update(viewModel: BoardViewModel): Unit =

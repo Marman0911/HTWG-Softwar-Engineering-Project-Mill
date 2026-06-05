@@ -7,8 +7,17 @@ import model.PlayerId
 import model.Position
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import view.BoardViewModel
 
 class GameControllerSpec extends AnyWordSpec with Matchers:
+
+  private class RecordingObserver extends GameObserver:
+    var updateCalls = 0
+    var lastViewModel: Option[BoardViewModel] = None
+
+    def update(viewModel: BoardViewModel): Unit =
+      updateCalls = updateCalls + 1
+      lastViewModel = Some(viewModel)
 
   "GameController.parseInput" should {
 
@@ -174,42 +183,72 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
   "runGameLoop" should {
 
     "stop immediately when the game is already over" in {
+      GameController.clearObservers()
       val lostP1 = Player(PlayerId.One, stonesInHand = 2, stonesOnBoard = 0)
       val terminalState = GameState(MillBoard(), lostP1, Player(PlayerId.Two), PlayerId.One)
+      val observer = RecordingObserver()
+      GameController.addObserver(observer)
 
       var inputCalled = false
       var promptCalled = false
       var lineCalled = false
-      var renderCalled = false
 
-      val result = runGameLoop(
+      val result = GameController.runGameLoop(
         terminalState,
         () =>
           inputCalled = true
           "a1",
         _ => promptCalled = true,
-        _ => lineCalled = true,
-        _ => renderCalled = true
+        _ => lineCalled = true
       )
 
       result should be(terminalState)
       inputCalled should be(false)
       promptCalled should be(false)
       lineCalled should be(false)
-      renderCalled should be(false)
+      observer.updateCalls should be(0)
+
+      GameController.removeObserver(observer)
+      GameController.clearObservers()
     }
 
     "evaluate continue condition before the turn loop" in {
+      GameController.clearObservers()
       val state = GameState()
 
       an[RuntimeException] should be thrownBy {
-        runGameLoop(
+        GameController.runGameLoop(
           state,
           () => throw new RuntimeException("stop-loop"),
-          _ => (),
           _ => (),
           _ => ()
         )
       }
+
+      GameController.clearObservers()
+    }
+
+    "notify observers after a valid move" in {
+      GameController.clearObservers()
+      val observer = RecordingObserver()
+      GameController.addObserver(observer)
+
+      val state = GameState()
+
+      an[RuntimeException] should be thrownBy {
+        GameController.runGameLoop(
+          state,
+          () => "a1",
+          _ => (),
+          _ => throw new RuntimeException("stop-after-first-update")
+        )
+      }
+
+      observer.updateCalls should be(1)
+      observer.lastViewModel shouldBe defined
+      observer.lastViewModel.get.stones should not be empty
+
+      GameController.removeObserver(observer)
+      GameController.clearObservers()
     }
   }
