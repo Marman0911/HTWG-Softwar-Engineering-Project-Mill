@@ -170,3 +170,42 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
       nextState.currentPlayer should be(PlayerId.One)
     }
   }
+
+  "runGameLoop" should {
+
+    "stop immediately when the game is already over" in {
+      val lostP1 = Player(PlayerId.One, stonesInHand = 2, stonesOnBoard = 0)
+      val terminalState = GameState(MillBoard(), lostP1, Player(PlayerId.Two), PlayerId.One)
+
+      var inputCalled = false
+      var promptCalled = false
+      var lineCalled = false
+
+      val result = runGameLoop(
+        terminalState,
+        () =>
+          inputCalled = true
+          "a1",
+        _ => promptCalled = true,
+        _ => lineCalled = true
+      )
+
+      result should be(terminalState)
+      inputCalled should be(false)
+      promptCalled should be(false)
+      lineCalled should be(false)
+    }
+
+    "evaluate continue condition before the turn loop" in {
+      val state = GameState()
+
+      an[RuntimeException] should be thrownBy {
+        runGameLoop(
+          state,
+          () => throw new RuntimeException("stop-loop"),
+          _ => (),
+          _ => ()
+        )
+      }
+    }
+  }
