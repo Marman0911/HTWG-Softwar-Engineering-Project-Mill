@@ -1,11 +1,19 @@
 package view
 
+import controller.BoardViewModel
+import controller.GameController
 import controller.GameObserver
+import controller.StonePlacement
 
-class BoardView(symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends GameObserver:
+// The View holds a reference to the Controller so it can actively pull
+// the current state when the Controller sends its update signal.
+class BoardView(controller: GameController, symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends GameObserver:
   private val eol = sys.props("line.separator")
 
-  def update(viewModel: BoardViewModel): Unit =
+  // The Controller calls this with no arguments – it is a pure signal.
+  // The View pulls the DTO from the Controller (which fetched it from the Model).
+  def update(): Unit =
+    val viewModel = controller.boardViewModel
     println(renderWithCoords(viewModel))
     println(s"Next: Player ${viewModel.nextPlayerNumber}")
 

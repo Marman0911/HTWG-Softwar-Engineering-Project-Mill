@@ -2,60 +2,66 @@ package controller
 
 import model.GameState
 import model.MillBoard
-import model.PlayerId
 import model.Position
-import view.BoardViewMapper
-import view.BoardViewModel
-import view.GameMessages
 
+// The View implements this trait and registers itself as observer on the Controller.
+// The Controller is the Observable: it sends a parameter-less signal to observers after
+// every successful move. The View then actively pulls the data it needs via controller.boardViewModel.
 trait GameObserver:
-  def update(viewModel: BoardViewModel): Unit
+  def update(): Unit
 
-object GameController:
-
-  private var observers: List[GameObserver] = List.empty
+// Observable trait: belongs in the controller layer because the Controller is the Observable.
+trait Observable:
+  private var _observers: List[GameObserver] = List.empty
 
   def addObserver(observer: GameObserver): Unit =
-    observers = observer :: observers
+    _observers = observer :: _observers
 
   def removeObserver(observer: GameObserver): Unit =
-    observers = observers.filterNot(_ eq observer)
+    _observers = _observers.filterNot(_ eq observer)
 
-  private[controller] def clearObservers(): Unit =
-    observers = List.empty
+  protected def notifyObservers(): Unit =
+    _observers.foreach(_.update())
 
-  private def notifyObservers(state: GameState): Unit =
-    val viewModel = BoardViewMapper.toViewModel(state)
-    observers.foreach(_.update(viewModel))
+// GameController is the Observable in the MVC architecture.
+// It owns the game state machine, applies business logic, and notifies observers.
+// It has NO knowledge of any view modality (no I/O callbacks, no view imports).
+class GameController(initialState: GameState = GameState()) extends Observable:
 
-  def runGameLoop(
-    state: GameState,
-    readInput: () => String,
-    promptOut: String => Unit,
-    lineOut: String => Unit
-  ): GameState =
-    if shouldContinue(state) then
-      promptOut(promptFor(state.currentPlayer))
-      val input = readInput()
+  private var state: GameState = initialState
 
-      handleTurnInput(state, input) match
-        case Left(message) =>
-          lineOut(message)
-          runGameLoop(state, readInput, promptOut, lineOut)
-        case Right(nextState) =>
-          notifyObservers(nextState)
-          runGameLoop(nextState, readInput, promptOut, lineOut)
-    else
-      state
+  // ---- Read-only state access (View pulls data from Controller) ------------
 
-  private[controller] def shouldContinue(state: GameState): Boolean =
-    !state.player1.hasLost && !state.player2.hasLost
+  def isGameOver: Boolean = !shouldContinue(state)
 
-  private[controller] def promptFor(player: PlayerId): String =
-    GameMessages.promptFor(player)
+  // The Controller fetches data from the Model and provides it to the View as a DTO.
+  // The View never touches the Model directly.
+  def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
+
+  // Returns the prompt string for the current player - no Model type exposed to View.
+  def currentPrompt: String = GameMessages.promptFor(state.currentPlayer)
+
+  /** Process one input token (e.g. "a1"). Updates internal state and notifies
+    * observers on success; returns Left with an error message on failure.
+    */
+  def handleInput(input: String): Either[String, Unit] =
+    handleTurnInput(state, input) match
+      case Left(message) =>
+        Left(message)
+      case Right(nextState) =>
+        state = nextState
+        notifyObservers()
+        Right(())
+
+  // ---- UI text helpers (modality-independent strings) ---------------------
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage
+
+  // ---- Business logic (package-private for unit tests) --------------------
+
+  private[controller] def shouldContinue(state: GameState): Boolean =
+    !state.player1.hasLost && !state.player2.hasLost
 
   private[controller] def reverseCoords(board: MillBoard): Map[(Int, Int), Position] =
     board.allPositions.map(pos => board.posCoords(pos) -> pos).toMap

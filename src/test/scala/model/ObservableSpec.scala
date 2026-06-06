@@ -1,51 +1,52 @@
-package model
+package controller
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class ObservableSpec extends AnyWordSpec with Matchers:
 
-  private class RecordingObserver extends Observer:
+  private class RecordingObserver extends GameObserver:
     var updateCalls = 0
-    var lastState: Option[GameState] = None
 
-    def update(state: GameState): Unit =
+    def update(): Unit =
       updateCalls = updateCalls + 1
-      lastState = Some(state)
 
-  private case class TestObservable(observers: List[Observer] = List.empty) extends Observable[TestObservable]:
-    def addObserver(o: Observer): TestObservable =
-      copy(observers = o :: observers)
-
-    def trigger(state: GameState): Unit =
-      notifyObservers(state)
+  private class TestObservable extends Observable:
+    def trigger(): Unit = notifyObservers()
 
   "Observable" should {
 
-    "notify added observers with the provided state" in {
+    "notify added observers" in {
       val observable = TestObservable()
-      val observer = RecordingObserver()
-      val state = GameState()
+      val observer   = RecordingObserver()
 
-      val withObserver = observable.addObserver(observer)
-      withObserver.trigger(state)
+      observable.addObserver(observer)
+      observable.trigger()
 
       observer.updateCalls should be(1)
-      observer.lastState should be(Some(state))
     }
 
     "notify all observers" in {
       val observable = TestObservable()
-      val observer1 = RecordingObserver()
-      val observer2 = RecordingObserver()
-      val state = GameState()
+      val observer1  = RecordingObserver()
+      val observer2  = RecordingObserver()
 
-      val withObservers = observable
-        .addObserver(observer1)
-        .addObserver(observer2)
-      withObservers.trigger(state)
+      observable.addObserver(observer1)
+      observable.addObserver(observer2)
+      observable.trigger()
 
       observer1.updateCalls should be(1)
       observer2.updateCalls should be(1)
+    }
+
+    "not notify a removed observer" in {
+      val observable = TestObservable()
+      val observer   = RecordingObserver()
+
+      observable.addObserver(observer)
+      observable.removeObserver(observer)
+      observable.trigger()
+
+      observer.updateCalls should be(0)
     }
   }

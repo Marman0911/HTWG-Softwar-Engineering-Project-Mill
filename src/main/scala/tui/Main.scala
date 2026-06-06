@@ -1,18 +1,24 @@
-package TUI
+package tui
 
 import controller.GameController
-import model.GameState
 import scala.io.StdIn.readLine
 import view.BoardView
-import view.BoardViewMapper
 
+// The TUI is the View layer for keyboard/terminal modality.
+// It translates user keystrokes into modality-independent controller actions,
+// drives the game loop, and re-renders via the observer callback.
 @main def millGame(): Unit =
-  val view = BoardView()
-  val state = GameState()
+  val controller = GameController()
+  val view       = BoardView(controller) // View holds ref to Controller for active pull
 
-  GameController.addObserver(view)
+  controller.addObserver(view)
 
-  println(GameController.welcomeMessage)
-  println(view.renderWithCoords(BoardViewMapper.toViewModel(state)))
+  println(controller.welcomeMessage)
+  println(view.renderWithCoords(controller.boardViewModel))
 
-  GameController.runGameLoop(state, () => readLine(), print, msg => println(msg))
+  while !controller.isGameOver do
+    print(controller.currentPrompt)
+    val input = readLine()
+    controller.handleInput(input) match
+      case Left(message) => println(message)
+      case Right(_)      => () // board re-render is triggered via observer

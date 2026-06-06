@@ -1,4 +1,4 @@
-package view
+package controller
 
 import model.PlayerId
 import org.scalatest.matchers.should.Matchers

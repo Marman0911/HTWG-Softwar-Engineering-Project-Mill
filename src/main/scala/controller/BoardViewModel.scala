@@ -1,4 +1,4 @@
-package view
+package controller
 
 case class StonePlacement(row: Int, col: Int, playerNumber: Int)
 
