@@ -1,24 +1,5 @@
 package model
 
-/*
-Every Square has 8 connection points
-The print has to be from top to bottom
-
-+--------------+--------------+
-|              |              |
-|    +---------+---------+    |
-|    |         |         |    |
-|    |    +----+----+    |    |
-|    |    |         |    |    |
-+----+----+         +----+----+
-|    |    |         |    |    |
-|    |    +----+----+    |    |
-|    |         |         |    |
-|    +---------+---------+    |
-|              |              |
-+--------------+--------------+
-*/
-
 case class Position(ring: Int, slot: Int)
 
 object MillBoard:

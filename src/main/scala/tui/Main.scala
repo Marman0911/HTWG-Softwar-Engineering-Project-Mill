@@ -4,7 +4,6 @@ import controller.GameController
 import scala.io.StdIn.readLine
 import view.BoardView
 
-// TuiRunner is the testable part of the TUI – the @main wires real I/O into it.
 class TuiRunner(controller: GameController, readInput: () => String):
   val view = BoardView(controller)
   controller.addObserver(view)
@@ -18,7 +17,7 @@ class TuiRunner(controller: GameController, readInput: () => String):
       val input = readInput()
       controller.handleInput(input) match
         case Left(message) => println(message)
-        case Right(_)      => () // board re-render is triggered via observer
+        case Right(_)      => ()
 
 @main def millGame(): Unit =
   TuiRunner(GameController(), () => readLine()).run()

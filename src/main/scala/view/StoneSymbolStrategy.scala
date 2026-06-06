@@ -1,7 +1,5 @@
 package view
 
-//Strategy Plattern weil Darstellungsart der Steine ausgetauscht werden können.
-
 trait StoneSymbolStrategy:
   def symbol(playerNumber: Int): Char
 

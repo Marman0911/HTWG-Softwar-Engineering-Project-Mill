@@ -5,8 +5,6 @@ import model.PlayerId
 
 object BoardViewMapper:
 
-  // ---- ASCII board rendering (moved from MillBoard) -----------------------
-
   private val intersection = "+"
   private val step         = "-"
   private val hPath        = step * 4
@@ -41,8 +39,6 @@ object BoardViewMapper:
         val v = if k < boardSize - 1 then vertRowOuter(boardSize, k) else vertRowInner(boardSize)
         Seq(h, v)
     topHalf ++ Seq(middleRow(boardSize)) ++ topHalf.reverse
-
-  // ---- ViewModel mapping --------------------------------------------------
 
   def toViewModel(state: GameState): BoardViewModel =
     val stones = state.board.stones.collect:

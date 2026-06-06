@@ -4,13 +4,9 @@ import model.GameState
 import model.MillBoard
 import model.Position
 
-// The View implements this trait and registers itself as observer on the Controller.
-// The Controller is the Observable: it sends a parameter-less signal to observers after
-// every successful move. The View then actively pulls the data it needs via controller.boardViewModel.
 trait GameObserver:
   def update(): Unit
 
-// Observable trait: belongs in the controller layer because the Controller is the Observable.
 trait Observable:
   private var _observers: List[GameObserver] = List.empty
 
@@ -23,27 +19,16 @@ trait Observable:
   protected def notifyObservers(): Unit =
     _observers.foreach(_.update())
 
-// GameController is the Observable in the MVC architecture.
-// It owns the game state machine, applies business logic, and notifies observers.
-// It has NO knowledge of any view modality (no I/O callbacks, no view imports).
 class GameController(initialState: GameState = GameState()) extends Observable:
 
   private var state: GameState = initialState
 
-  // ---- Read-only state access (View pulls data from Controller) ------------
-
   def isGameOver: Boolean = !shouldContinue(state)
 
-  // The Controller fetches data from the Model and provides it to the View as a DTO.
-  // The View never touches the Model directly.
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
 
-  // Returns the prompt string for the current player - no Model type exposed to View.
   def currentPrompt: String = GameMessages.promptFor(state.currentPlayer)
 
-  /** Process one input token (e.g. "a1"). Updates internal state and notifies
-    * observers on success; returns Left with an error message on failure.
-    */
   def handleInput(input: String): Either[String, Unit] =
     handleTurnInput(state, input) match
       case Left(message) =>
@@ -53,12 +38,8 @@ class GameController(initialState: GameState = GameState()) extends Observable:
         notifyObservers()
         Right(())
 
-  // ---- UI text helpers (modality-independent strings) ---------------------
-
   def welcomeMessage: String =
     GameMessages.welcomeMessage
-
-  // ---- Business logic (package-private for unit tests) --------------------
 
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
