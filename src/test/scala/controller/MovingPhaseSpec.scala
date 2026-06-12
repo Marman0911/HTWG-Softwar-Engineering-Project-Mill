@@ -19,7 +19,7 @@ class MovingPhaseSpec extends AnyFlatSpec with Matchers:
     phase.handleInput("a1", state) shouldBe Left("Moving phase: not yet implemented")
 
   it should "return the correct prompt" in:
-    phase.prompt shouldBe "[Moving] Enter move (from to): "
-
+    phase.prompt(GameState()) shouldBe "[Moving] Enter move (from to): "
+    
   it should "return itself from next (stays in MovingPhase)" in:
     phase.next(state) shouldBe a[MovingPhase]

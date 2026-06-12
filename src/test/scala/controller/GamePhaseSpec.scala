@@ -10,13 +10,15 @@ class GamePhaseSpec extends AnyFlatSpec with Matchers:
   class AlwaysSuccessPhase extends GamePhase:
     def handleInput(input: String, state: GameState): Either[String, GameState] =
       Right(state)
-    def prompt: String = "test prompt"
+    // HIER: Parameter hinzugefügt
+    def prompt(state: GameState): String = "test prompt"
     def next(state: GameState): GamePhase = this
 
   class AlwaysFailPhase extends GamePhase:
     def handleInput(input: String, state: GameState): Either[String, GameState] =
       Left("error")
-    def prompt: String = "fail prompt"
+    // HIER: Parameter hinzugefügt
+    def prompt(state: GameState): String = "fail prompt"
     def next(state: GameState): GamePhase = this
 
   val state = GameState()
@@ -28,7 +30,8 @@ class GamePhaseSpec extends AnyFlatSpec with Matchers:
     AlwaysFailPhase().handleInput("a1", state) shouldBe a[Left[?, ?]]
 
   it should "return a non-empty prompt" in:
-    AlwaysSuccessPhase().prompt should not be empty
+    // HIER: 'state' beim Aufruf übergeben, da die Methode es jetzt verlangt
+    AlwaysSuccessPhase().prompt(state) should not be empty
 
   it should "return a GamePhase from next" in:
     AlwaysSuccessPhase().next(state) shouldBe a[GamePhase]

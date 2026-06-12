@@ -36,8 +36,7 @@ class PlacingPhaseSpec extends AnyFlatSpec with Matchers:
 
   it should "return the correct prompt" in:
     val phase = PlacingPhase(successParsePos)
-    phase.prompt shouldBe "[Placing] Enter position (e.g. a1): "
-
+    phase.prompt(GameState()) shouldBe "Player 1 enter position (e.g. a1): "
   it should "stay in PlacingPhase when board is not full" in:
     val phase = PlacingPhase(successParsePos)
     phase.next(state) shouldBe a[PlacingPhase]
