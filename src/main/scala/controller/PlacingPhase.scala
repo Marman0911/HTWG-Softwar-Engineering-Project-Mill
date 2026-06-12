@@ -1,7 +1,9 @@
-package controller.phase
+package controller
 
 import model.{GameState, MillBoard, Position}
 import controller.GameMessages
+import controller.GamePhase
+import controller.MovingPhase
 
 class PlacingPhase(parsePos: (String, MillBoard) => Option[Position]) extends GamePhase:
 

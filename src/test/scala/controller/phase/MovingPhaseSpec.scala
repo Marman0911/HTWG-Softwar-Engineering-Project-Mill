@@ -1,4 +1,4 @@
-package controller.phase
+package controller
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -13,7 +13,7 @@ class MovingPhaseSpec extends AnyFlatSpec with Matchers:
   val state = GameState()
 
   "MovingPhase" should "always return Left (not yet implemented)" in:
-    phase.handleInput("a1", state) shouldBe a[Left[_, _]]
+    phase.handleInput("a1", state) shouldBe a[Left[?, ?]]
 
   it should "return the not implemented message" in:
     phase.handleInput("a1", state) shouldBe Left("Moving phase: not yet implemented")

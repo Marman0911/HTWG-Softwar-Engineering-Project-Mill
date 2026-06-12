@@ -3,8 +3,6 @@ package controller
 import model.GameState
 import model.MillBoard
 import model.Position
-import controller.command.PlaceCommand
-import controller.phase.{GamePhase, PlacingPhase}
 import scala.util.Try
 
 trait GameObserver:

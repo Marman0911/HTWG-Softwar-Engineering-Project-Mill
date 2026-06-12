@@ -1,8 +1,9 @@
-package controller.phase
+package controller
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import model.{GameState, MillBoard, Position, PlayerId}
+import controller.MovingPhase
 
 class PlacingPhaseSpec extends AnyFlatSpec with Matchers:
 
@@ -18,11 +19,11 @@ class PlacingPhaseSpec extends AnyFlatSpec with Matchers:
 
   "PlacingPhase" should "return Right when position is valid and empty" in:
     val phase = PlacingPhase(successParsePos)
-    phase.handleInput("a1", state) shouldBe a[Right[_, _]]
+    phase.handleInput("a1", state) shouldBe a[Right[?, ?]]
 
   it should "return Left when position cannot be parsed" in:
     val phase = PlacingPhase(failParsePos)
-    phase.handleInput("invalid", state) shouldBe a[Left[_, _]]
+    phase.handleInput("invalid", state) shouldBe a[Left[?, ?]]
 
   it should "return Left with invalidPosition message on bad input" in:
     val phase = PlacingPhase(failParsePos)

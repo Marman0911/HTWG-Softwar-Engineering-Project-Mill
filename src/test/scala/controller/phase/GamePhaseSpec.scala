@@ -1,8 +1,9 @@
-package controller.phase
+package controller
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import model.{GameState, MillBoard, Position}
+import controller.GamePhase
 
 class GamePhaseSpec extends AnyFlatSpec with Matchers:
 
@@ -24,7 +25,7 @@ class GamePhaseSpec extends AnyFlatSpec with Matchers:
     AlwaysSuccessPhase().handleInput("a1", state) shouldBe Right(state)
 
   it should "return Left on failure" in:
-    AlwaysFailPhase().handleInput("a1", state) shouldBe a[Left[_, _]]
+    AlwaysFailPhase().handleInput("a1", state) shouldBe a[Left[?, ?]]
 
   it should "return a non-empty prompt" in:
     AlwaysSuccessPhase().prompt should not be empty

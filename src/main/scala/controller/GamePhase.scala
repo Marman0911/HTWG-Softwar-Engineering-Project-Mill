@@ -1,4 +1,4 @@
-package controller.phase
+package controller
 
 import model.GameState
 
