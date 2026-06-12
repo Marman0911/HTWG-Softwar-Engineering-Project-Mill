@@ -25,7 +25,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          #cache: sbt
+          cache: sbt
 
       - name: Run tests with coverage
         run: sbt clean coverage test coverageReport
