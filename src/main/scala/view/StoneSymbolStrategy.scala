@@ -10,3 +10,7 @@ object NumberStoneSymbols extends StoneSymbolStrategy:
 object LetterStoneSymbols extends StoneSymbolStrategy:
   def symbol(playerNumber: Int): Char =
     if playerNumber == 1 then 'X' else 'O'
+
+object EmojiStoneSymbols extends StoneSymbolStrategy:
+  def symbol(playerNumber: Int): Char =
+    if playerNumber == 1 then '●' else '○'

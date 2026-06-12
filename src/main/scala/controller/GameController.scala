@@ -3,6 +3,9 @@ package controller
 import model.GameState
 import model.MillBoard
 import model.Position
+import controller.command.PlaceCommand
+import controller.phase.{GamePhase, PlacingPhase}
+import scala.util.Try
 
 trait GameObserver:
   def update(): Unit
@@ -22,24 +25,39 @@ trait Observable:
 class GameController(initialState: GameState = GameState()) extends Observable:
 
   private var state: GameState = initialState
+  private var history: List[GameState] = Nil
+  private var phase: GamePhase = PlacingPhase(parseInput)
 
   def isGameOver: Boolean = !shouldContinue(state)
 
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
 
-  def currentPrompt: String = GameMessages.promptFor(state.currentPlayer)
-
+  def currentPrompt: String = phase.prompt
+  
   def handleInput(input: String): Either[String, Unit] =
-    handleTurnInput(state, input) match
-      case Left(message) =>
-        Left(message)
-      case Right(nextState) =>
-        state = nextState
-        notifyObservers()
-        Right(())
+    input.trim.toLowerCase match
+      case "undo" => undo()
+      case _ =>
+        phase.handleInput(input, state) match
+          case Left(message)    => Left(message)
+          case Right(nextState) =>
+            history = state :: history
+            state = nextState
+            phase = phase.next(state)
+            notifyObservers()
+            Right(())
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage
+
+  def undo(): Either[String, Unit] =
+  history match
+    case Nil          => Left("Nothing to undo.")
+    case prev :: rest =>
+      state = prev
+      history = rest
+      notifyObservers()
+      Right(())
 
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
@@ -49,7 +67,14 @@ class GameController(initialState: GameState = GameState()) extends Observable:
 
   private[controller] def parseInput(input: String, board: MillBoard): Option[Position] =
     val clean = input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
-
+    for
+      _      <- Option.when(clean.length >= 2)(())
+      letter  = if clean.head.isLetter then clean.head else clean.last
+      number  = if clean.head.isLetter then clean.tail else clean.init
+      colIdx  = letter - 'a'
+      rowNum <- Try(number.toInt).toOption   // Try statt toIntOption – kein try-catch
+      pos    <- reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
+    yield pos
     if clean.length < 2 then None
     else
       val (letter, number) =
