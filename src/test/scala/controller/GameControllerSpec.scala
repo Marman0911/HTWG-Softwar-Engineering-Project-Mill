@@ -212,12 +212,52 @@ class GameControllerSpec extends AnyWordSpec with Matchers:
 
     "return Left for occupied position without notifying observers" in {
       val ctrl = freshController
-      ctrl.handleInput("a1") // player 1 places at a1
+      ctrl.handleInput("a1")
 
       val observer = RecordingObserver()
       ctrl.addObserver(observer)
 
       ctrl.handleInput("a1")   should be(Left("Position occupied."))
       observer.updateCalls should be(0)
+    }
+  }
+
+  "GameController.undo" should {
+
+    "return a Left error message when history is empty" in {
+      val ctrl = freshController
+      ctrl.undo() should be(Left("Nothing to undo."))
+    }
+
+    "restore the previous state and decrease history when executing successfully" in {
+      val ctrl = freshController
+      ctrl.handleInput("a1") should be(Right(()))
+      ctrl.boardViewModel.stones.map(_.playerNumber) should contain (1)
+
+      val undoResult = ctrl.undo()
+      undoResult should be(Right(()))
+      ctrl.boardViewModel.stones should be (empty)
+    }
+
+    "trigger notifyObservers upon a successful undo execution" in {
+      val ctrl = freshController
+      val observer = RecordingObserver()
+      
+      ctrl.handleInput("a1") should be(Right(()))
+      ctrl.addObserver(observer)
+      observer.updateCalls should be(0)
+
+      ctrl.undo() should be(Right(()))
+      observer.updateCalls should be(1)
+    }
+  }
+
+  "GameController.handleInput with 'undo'" should {
+
+    "intercept the command 'undo' and route it internally to the undo logic" in {
+      val ctrl = freshController
+      ctrl.handleInput("a1") should be(Right(()))
+      ctrl.handleInput("  UNDO  ") should be(Right(()))
+      ctrl.boardViewModel.stones should be (empty)
     }
   }

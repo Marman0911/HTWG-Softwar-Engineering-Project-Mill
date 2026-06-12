@@ -20,3 +20,11 @@ class StoneSymbolStrategySpec extends AnyWordSpec with Matchers:
       LetterStoneSymbols.symbol(2) should be('O')
     }
   }
+
+  "EmojiStoneSymbols" should {
+
+    "render player ids as emojis" in {
+      EmojiStoneSymbols.symbol(1) should be('●')
+      EmojiStoneSymbols.symbol(2) should be('○')
+    }
+  }
