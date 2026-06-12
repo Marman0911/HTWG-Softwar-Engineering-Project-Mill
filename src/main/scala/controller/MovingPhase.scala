@@ -7,8 +7,7 @@ class MovingPhase(parsePos: (String, MillBoard) => Option[Position]) extends Gam
 
   def handleInput(input: String, state: GameState): Either[String, GameState] =
     Left("Moving phase: not yet implemented")
-
-  def prompt: String =
+  def prompt(state: GameState): String =
     "[Moving] Enter move (from to): "
 
   def next(state: GameState): GamePhase = this

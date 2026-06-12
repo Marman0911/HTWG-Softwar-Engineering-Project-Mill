@@ -12,8 +12,8 @@ class PlacingPhase(parsePos: (String, MillBoard) => Option[Position]) extends Ga
       case None      => Left(GameMessages.invalidPosition)
       case Some(pos) => state.placeStone(pos).toRight(GameMessages.occupiedPosition)
 
-  def prompt: String =
-    "[Placing] Enter position (e.g. a1): "
+  def prompt(state: GameState): String =
+    GameMessages.promptFor(state.currentPlayer)
 
   def next(state: GameState): GamePhase =
     val placed = state.board.stones.values.count(_.isDefined)

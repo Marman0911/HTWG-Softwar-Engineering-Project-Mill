@@ -30,7 +30,7 @@ class GameController(initialState: GameState = GameState()) extends Observable:
 
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
 
-  def currentPrompt: String = phase.prompt
+  def currentPrompt: String = phase.prompt(state)
   
   def handleInput(input: String): Either[String, Unit] =
     input.trim.toLowerCase match
