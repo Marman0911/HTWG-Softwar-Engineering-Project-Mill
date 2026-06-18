@@ -39,6 +39,7 @@ object MillGui extends GameObserver:
   private val backToMenuButton = bigButton("Zurück")
 
   private val gameMenuButton = new Button("Menü")
+  private val undoButtonGame = new Button("Undo")
   private val quitButtonGame = new Button("Quit")
 
   private val modeMessageLabel = new Label(""):
@@ -93,7 +94,7 @@ object MillGui extends GameObserver:
     contents += new FlowPanel(boardPanel)
     contents += new FlowPanel(turnPanel)
     contents += new FlowPanel(messageLabel)
-    contents += new FlowPanel(gameMenuButton, quitButtonGame)
+    contents += new FlowPanel(gameMenuButton, undoButtonGame, quitButtonGame)
 
   private val frame = new MainFrame:
     title = "Mühle"
@@ -148,6 +149,11 @@ object MillGui extends GameObserver:
       showPanel(mainMenuPanel)
   )
 
+  undoButtonGame.peer.addActionListener(new ActionListener:
+    override def actionPerformed(e: ActionEvent): Unit =
+      undoMove()
+  )
+
   quitButtonGame.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
       frame.peer.dispose()
@@ -192,6 +198,20 @@ object MillGui extends GameObserver:
 
     refresh()
 
+  private def undoMove(): Unit =
+
+    //GUI benutzt Controller - beim Klick auf Undo
+    //GUI macht Undo nicht selbst sondern fragt den Controller
+    controller.handleInput("undo") match
+
+      case Left(errorMessage) =>
+        messageLabel.text = errorMessage
+
+      case Right(_) =>
+        messageLabel.text = "Zug rückgängig gemacht."
+
+    refresh()
+
   private def refresh(): Unit =
     boardPanel.repaint()
     turnPanel.repaint()
@@ -233,7 +253,7 @@ object MillGui extends GameObserver:
     def click(mouseX: Int, mouseY: Int): Unit =
       freePointAt(mouseX, mouseY) match
         case Some((gridX, gridY)) =>
-            playMove(GuiCoordinateMapper.toPosition(gridX, gridY))  
+          playMove(GuiCoordinateMapper.toPosition(gridX, gridY))
 
         case None =>
           messageLabel.text = "Bitte auf einen freien grünen Punkt klicken."
