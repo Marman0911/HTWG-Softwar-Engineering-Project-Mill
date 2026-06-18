@@ -220,14 +220,31 @@ object MillGui extends GameObserver:
   override def update(): Unit =
     refresh()
 
-  def main(args: Array[String]): Unit =
+
+
+
+//Änderung
+  private def openGui(startPanel: Component): Unit =
     Swing.onEDT:
       blinkTimer.start()
-      frame.pack()
-      frame.centerOnScreen()
+      showPanel(startPanel)
       frame.open()
 
     closed.await()
+
+  def startWith(sharedController: GameController): Unit =
+    controller = sharedController
+
+    // Gui meldet sich beim Controller - Gui wird darüber informiert wenn 
+    //sich beim Controller was ändert
+    controller.addObserver(this)
+
+    messageLabel.text = "Klicke auf einen grünen Punkt."
+    refresh()
+    openGui(gamePanel)
+
+  def main(args: Array[String]): Unit =
+    openGui(mainMenuPanel)
 
   private class MillBoardPanel extends Panel:
 
