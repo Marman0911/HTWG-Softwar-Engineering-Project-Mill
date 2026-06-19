@@ -5,7 +5,6 @@ import model.board.Position
 import model.game.GameState
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import scala.util.{Failure, Success}
 
 class PlacingPhaseSpec extends AnyFlatSpec with Matchers:
 
@@ -21,34 +20,32 @@ class PlacingPhaseSpec extends AnyFlatSpec with Matchers:
   val state: GameState =
     GameState()
 
-  "PlacingPhase" should "return Success when position is valid and empty" in:
+  "PlacingPhase" should "return Right when position is valid and empty" in:
     val phase = PlacingPhase(successParsePos)
 
-    phase.handleInput("a1", state).isSuccess shouldBe true
+    phase.handleInput("a1", state).isRight shouldBe true
 
-  it should "return Failure when position cannot be parsed" in:
+  it should "return Left when position cannot be parsed" in:
     val phase = PlacingPhase(failParsePos)
 
-    phase.handleInput("invalid", state).isFailure shouldBe true
+    phase.handleInput("invalid", state).isLeft shouldBe true
 
-  it should "return Failure with invalidPosition message on bad input" in:
+  it should "return Left with invalidPosition message on bad input" in:
     val phase = PlacingPhase(failParsePos)
 
-    phase.handleInput("invalid", state) match {
-      case Failure(e) => e.getMessage shouldBe "Invalid position."
-      case Success(_) => fail("Test fehlgeschlagen: Parser-Fehler hätte Failure werfen müssen!")
-    }
+    phase.handleInput("invalid", state) shouldBe Left("Invalid position.")
 
-  it should "return Failure when position is already occupied" in:
+  it should "return Left when position is already occupied" in:
     val phase = PlacingPhase(successParsePos)
 
-    val filledState =
-      phase.handleInput("a1", state).get
+    // 1. Hol das Command aus dem Right-Zweig
+    val cmd = phase.handleInput("a1", state).getOrElse(fail("Hätte ein valides Command liefern müssen"))
+    
+    // 2. Führe das Command aus, um den GameState zu bekommen, auf dem der Stein jetzt liegt
+    val filledState = cmd.execute(state).get
 
-    phase.handleInput("a1", filledState) match {
-      case Failure(e) => e.getMessage shouldBe "Position occupied."
-      case Success(_) => fail("Test fehlgeschlagen: Feld hätte besetzt sein müssen!")
-    }
+    // 3. Prüfe, ob handleInput auf dem nun besetzten Feld wie erwartet ein Left liefert
+    phase.handleInput("a1", filledState) shouldBe Left("Position occupied.")
 
   it should "return the correct prompt" in:
     val phase = PlacingPhase(successParsePos)
