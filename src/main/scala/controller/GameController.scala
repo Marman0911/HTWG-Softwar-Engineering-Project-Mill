@@ -1,16 +1,17 @@
 package controller
 
-import model.game.GameState
 import model.board.Board
 import model.board.Position
+import model.game.GameState
 
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 trait GameObserver:
   def update(): Unit
 
 trait Observable:
-  private var _observers: List[GameObserver] = List.empty
+  private var _observers: List[GameObserver] =
+    List.empty
 
   def addObserver(observer: GameObserver): Unit =
     _observers = observer :: _observers
@@ -29,15 +30,20 @@ class GameController(initialState: GameState = GameState()) extends Observable:
   private var commandHistory: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
-  def isGameOver: Boolean = !shouldContinue(state)
+  def isGameOver: Boolean =
+    !shouldContinue(state)
 
-  def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
+  def boardViewModel: BoardViewModel =
+    BoardViewMapper.toViewModel(state)
 
-  def currentPrompt: String = phase.prompt(state)
+  def currentPrompt: String =
+    phase.prompt(state)
 
   def handleInput(input: String): Try[Unit] =
     input.trim.toLowerCase match
-      case "undo" => undo()
+      case "undo" =>
+        undo()
+
       case _ =>
         phase.handleInput(input, state) match
           case Left(message) =>
@@ -77,13 +83,13 @@ class GameController(initialState: GameState = GameState()) extends Observable:
     board.allPositions.map(pos => board.posCoords(pos) -> pos).toMap
 
   private[controller] def parseInput(input: String, board: Board): Option[Position] =
-    val clean = input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
+    val clean =
+      input.trim.toLowerCase.filter(_.isLetterOrDigit)
 
-    if clean.length < 2 then None
-    else
-      val (letter, number) =
-        if clean.head.isLetter then (clean.head, clean.tail)
-        else (clean.last, clean.init)
+    val parsedInput =
+      clean.toList match
+        case letter :: digit :: Nil if letter.isLetter && digit.isDigit =>
+          Some((letter, digit.asDigit))
 
       val colIdx = letter - 'a'
 
