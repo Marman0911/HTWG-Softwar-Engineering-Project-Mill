@@ -4,13 +4,14 @@ import model.game.GameState
 import model.board.Board
 import model.board.Position
 import controller.command.*
+import scala.util.{Try, Success, Failure}
 
 class PlacingPhase(parsePos: (String, Board) => Option[Position]) extends GamePhase:
 
-  def handleInput(input: String, state: GameState): Either[String, GameCommand] =
+  def handleInput(input: String, state: GameState): Try[GameCommand] =
     parsePos(input, state.board) match
-      case None      => Left(GameMessages.invalidPosition)
-      case Some(pos) => Right(PlaceCommand(pos))
+      case None      => Failure(new IllegalArgumentException(GameMessages.invalidPosition))
+      case Some(pos) => Success(PlaceCommand(pos))
 
   def prompt(state: GameState): String =
     GameMessages.promptFor(state.currentPlayer)
