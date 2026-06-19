@@ -1,14 +1,17 @@
-package model
+package model.game.impl
 
-enum MoveType:
-  case Place, Move, Fly, Remove
+import model.board.Board
+import model.board.Position
+import model.game.GameState
+import model.player.Player
+import model.player.PlayerId
 
-case class GameState(
-  board: MillBoard,
-  player1: Player,
-  player2: Player,
-  currentPlayer: PlayerId = PlayerId.One
-):
+private[game] case class GameStateImpl(
+    board: Board,
+    player1: Player,
+    player2: Player,
+    currentPlayer: PlayerId = PlayerId.One
+) extends GameState:
 
   def currentPlayerObj: Player =
     if currentPlayer == PlayerId.One then player1 else player2
@@ -22,11 +25,3 @@ case class GameState(
         board = newBoard,
         currentPlayer = nextPlayer
       )
-
-object GameState:
-  def apply(): GameState =
-    GameState(
-      MillBoard(),
-      PlayerFactory.create(PlayerId.One),
-      PlayerFactory.create(PlayerId.Two)
-    )

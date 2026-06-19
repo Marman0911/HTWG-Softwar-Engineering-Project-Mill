@@ -1,6 +1,6 @@
 package controller
 
-import model.GameState
+import model.game.GameState
 
 trait GamePhase:
   def handleInput(input: String, state: GameState): Either[String, GameState]

@@ -1,7 +1,7 @@
 package controller
 
-import model.GameState
-import model.PlayerId
+import model.game.GameState
+import model.player.PlayerId
 
 object BoardViewMapper:
 
@@ -41,8 +41,8 @@ object BoardViewMapper:
     topHalf ++ Seq(middleRow(boardSize)) ++ topHalf.reverse
 
   def toViewModel(state: GameState): BoardViewModel =
-    val stones = state.board.stones.collect:
-      case (pos, Some(player)) =>
+    val stones = state.board.placedStones.toSeq.map:
+      case (pos, player) =>
         val (row, col) = state.board.posCoords(pos)
         val playerNumber = if player == PlayerId.One then 1 else 2
         StonePlacement(row, col, playerNumber)

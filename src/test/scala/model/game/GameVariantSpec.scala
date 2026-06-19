@@ -1,5 +1,7 @@
-package model
+package model.game
 
+import model.game.SmallMill
+import model.game.StandardMill
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

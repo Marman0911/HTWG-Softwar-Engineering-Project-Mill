@@ -17,5 +17,5 @@ lazy val root = project
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),
 
     // Exclude Main from coverage
-    coverageExcludedFiles := ".*Main.*;.*MillGui.*"
+    coverageExcludedFiles := ".*Main.*;.*MillGui.*;.*MillApp.*"
   )

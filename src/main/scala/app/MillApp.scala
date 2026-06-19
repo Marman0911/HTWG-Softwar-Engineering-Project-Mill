@@ -10,12 +10,12 @@ package app
 
 import controller.GameController
 import gui.MillGui
-import model.GameFactory
+import model.game.GameComponent
 import scala.io.StdIn.readLine
 import tui.TuiRunner
 
 @main def millApp(): Unit =
-  val controller = GameController(GameFactory.standard)
+  val controller = GameController(GameComponent.standard)
 
   val tuiThread = new Thread(new Runnable:
     override def run(): Unit =

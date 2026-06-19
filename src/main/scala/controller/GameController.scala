@@ -1,8 +1,8 @@
 package controller
 
-import model.GameState
-import model.MillBoard
-import model.Position
+import model.game.GameState
+import model.board.Board
+import model.board.Position
 import scala.util.Try
 
 trait GameObserver:
@@ -60,10 +60,10 @@ class GameController(initialState: GameState = GameState()) extends Observable:
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
 
-  private[controller] def reverseCoords(board: MillBoard): Map[(Int, Int), Position] =
+  private[controller] def reverseCoords(board: Board): Map[(Int, Int), Position] =
     board.allPositions.map(pos => board.posCoords(pos) -> pos).toMap
 
-  private[controller] def parseInput(input: String, board: MillBoard): Option[Position] =
+  private[controller] def parseInput(input: String, board: Board): Option[Position] =
     val clean = input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
     for
       _      <- Option.when(clean.length >= 2)(())

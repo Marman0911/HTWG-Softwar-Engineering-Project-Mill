@@ -1,14 +1,16 @@
-package model
+package model.player
 
+import model.player.PlayerComponent
+import model.player.PlayerId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class PlayerFactorySpec extends AnyWordSpec with Matchers:
 
-  "PlayerFactory" should {
+  "PlayerComponent" should {
 
     "create player one" in {
-      val player = PlayerFactory.create(PlayerId.One)
+      val player = PlayerComponent.create(PlayerId.One)
 
       player.id should be(PlayerId.One)
       player.stonesInHand should be(9)
@@ -16,7 +18,7 @@ class PlayerFactorySpec extends AnyWordSpec with Matchers:
     }
 
     "create player two" in {
-      val player = PlayerFactory.create(PlayerId.Two)
+      val player = PlayerComponent.create(PlayerId.Two)
 
       player.id should be(PlayerId.Two)
       player.stonesInHand should be(9)

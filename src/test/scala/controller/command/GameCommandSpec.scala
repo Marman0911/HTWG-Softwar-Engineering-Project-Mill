@@ -1,19 +1,21 @@
 package controller.command
 
+import model.game.GameState
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import model.{GameState, MillBoard, Position}
 
 class GameCommandSpec extends AnyFlatSpec with Matchers:
 
-  // Dummy-Implementierung um den Trait zu testen
   class AlwaysSuccessCommand extends GameCommand:
-    def execute(state: GameState): Option[GameState] = Some(state)
+    def execute(state: GameState): Option[GameState] =
+      Some(state)
 
   class AlwaysFailCommand extends GameCommand:
-    def execute(state: GameState): Option[GameState] = None
+    def execute(state: GameState): Option[GameState] =
+      None
 
-  val state = GameState()
+  val state: GameState =
+    GameState()
 
   "A GameCommand" should "return Some(GameState) on success" in:
     val cmd = AlwaysSuccessCommand()

@@ -1,5 +1,9 @@
-package model
+package model.game
 
+import model.board.Position
+import model.game.GameState
+import model.game.MoveType
+import model.player.PlayerId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -23,7 +27,7 @@ class GameStateSpec extends AnyWordSpec with Matchers:
       val next = state.placeStone(pos)
 
       next shouldBe defined
-      next.get.board.stones(pos) should be(Some(PlayerId.One))
+      next.get.board.placedStones.get(pos) should be(Some(PlayerId.One))
       next.get.currentPlayer should be(PlayerId.Two)
       next.get.currentPlayerObj should be(next.get.player2)
     }
@@ -37,7 +41,7 @@ class GameStateSpec extends AnyWordSpec with Matchers:
       val afterSecondMove = afterFirstMove.placeStone(Position(0, 1))
 
       afterSecondMove shouldBe defined
-      afterSecondMove.get.board.stones(Position(0, 1)) should be(Some(PlayerId.Two))
+      afterSecondMove.get.board.placedStones.get(Position(0, 1)) should be(Some(PlayerId.Two))
       afterSecondMove.get.currentPlayer should be(PlayerId.One)
       afterSecondMove.get.currentPlayerObj should be(afterSecondMove.get.player1)
     }

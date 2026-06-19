@@ -1,6 +1,6 @@
 package controller
 
-import model.PlayerId
+import model.player.PlayerId
 
 object GameMessages:
 

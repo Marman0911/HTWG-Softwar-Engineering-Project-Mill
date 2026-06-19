@@ -1,27 +1,33 @@
 package controller
 
+import model.game.GameState
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import model.{GameState, MillBoard, Position}
-import controller.GamePhase
 
 class GamePhaseSpec extends AnyFlatSpec with Matchers:
 
   class AlwaysSuccessPhase extends GamePhase:
     def handleInput(input: String, state: GameState): Either[String, GameState] =
       Right(state)
-    // HIER: Parameter hinzugefügt
-    def prompt(state: GameState): String = "test prompt"
-    def next(state: GameState): GamePhase = this
+
+    def prompt(state: GameState): String =
+      "test prompt"
+
+    def next(state: GameState): GamePhase =
+      this
 
   class AlwaysFailPhase extends GamePhase:
     def handleInput(input: String, state: GameState): Either[String, GameState] =
       Left("error")
-    // HIER: Parameter hinzugefügt
-    def prompt(state: GameState): String = "fail prompt"
-    def next(state: GameState): GamePhase = this
 
-  val state = GameState()
+    def prompt(state: GameState): String =
+      "fail prompt"
+
+    def next(state: GameState): GamePhase =
+      this
+
+  val state: GameState =
+    GameState()
 
   "A GamePhase" should "return Right on success" in:
     AlwaysSuccessPhase().handleInput("a1", state) shouldBe Right(state)
@@ -30,7 +36,6 @@ class GamePhaseSpec extends AnyFlatSpec with Matchers:
     AlwaysFailPhase().handleInput("a1", state) shouldBe a[Left[?, ?]]
 
   it should "return a non-empty prompt" in:
-    // HIER: 'state' beim Aufruf übergeben, da die Methode es jetzt verlangt
     AlwaysSuccessPhase().prompt(state) should not be empty
 
   it should "return a GamePhase from next" in:

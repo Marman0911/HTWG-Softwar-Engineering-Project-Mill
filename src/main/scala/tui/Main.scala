@@ -3,7 +3,7 @@ package tui
 import controller.GameController
 import scala.io.StdIn.readLine
 import view.BoardView
-import model.GameFactory
+import model.game.GameComponent
 
 class TuiRunner(controller: GameController, readInput: () => String):
   val view = BoardView(controller)
@@ -26,4 +26,4 @@ class TuiRunner(controller: GameController, readInput: () => String):
             case Right(_)      => ()
 
 @main def millGame(): Unit =
-  TuiRunner(GameController(GameFactory.standard), () => readLine()).run()
+  TuiRunner(GameController(GameComponent.standard), () => readLine()).run()

@@ -1,4 +1,4 @@
-package model
+package model.game
 
 trait GameVariant:
   def boardSize: Int

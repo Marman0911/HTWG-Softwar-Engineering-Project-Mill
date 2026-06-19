@@ -1,8 +1,7 @@
 package controller
 
-import model.GameState
-import model.PlayerId
-import model.Position
+import model.board.Position
+import model.game.GameState
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

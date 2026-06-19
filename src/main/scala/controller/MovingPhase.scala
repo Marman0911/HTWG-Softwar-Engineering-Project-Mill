@@ -1,9 +1,11 @@
 package controller
 
-import model.{GameState, MillBoard, Position}
+import model.game.GameState
+import model.board.Board
+import model.board.Position
 import controller.GamePhase
 
-class MovingPhase(parsePos: (String, MillBoard) => Option[Position]) extends GamePhase:
+class MovingPhase(parsePos: (String, Board) => Option[Position]) extends GamePhase:
 
   def handleInput(input: String, state: GameState): Either[String, GameState] =
     Left("Moving phase: not yet implemented")

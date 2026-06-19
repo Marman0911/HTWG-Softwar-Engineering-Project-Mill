@@ -1,25 +1,28 @@
-package model
+package model.board
 
+import model.board.BoardComponent
+import model.board.Position
+import model.player.PlayerId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class MillBoardSpec extends AnyWordSpec with Matchers:
 
-  "MillBoard" should {
+  "BoardComponent" should {
 
     "create the default board size" in {
-      val board = MillBoard()
+      val board = BoardComponent.create()
       board.boardSize should be(3)
     }
 
     "initialize all positions as empty" in {
-      val board = MillBoard(3)
-      board.stones.values.forall(_.isEmpty) should be(true)
+      val board = BoardComponent.create(3)
+      board.placedStones shouldBe empty
       board.allPositions.length should be(24)
     }
 
     "map all slots to coordinates" in {
-      val board = MillBoard(3)
+      val board = BoardComponent.create(3)
       val ring = 1
 
       board.posCoords(Position(ring, 0)) should be((2, 5))
@@ -33,18 +36,18 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
     }
 
     "place a stone on an empty position" in {
-      val board = MillBoard()
+      val board = BoardComponent.create()
       val pos = Position(0, 0)
 
       val result = board.placeStone(pos, PlayerId.One)
 
       result shouldBe defined
-      result.get.stones(pos) should be(Some(PlayerId.One))
-      board.stones(pos) should be(None)
+      result.get.placedStones.get(pos) should be(Some(PlayerId.One))
+      board.placedStones.get(pos) should be(None)
     }
 
     "reject placing on an occupied position" in {
-      val board = MillBoard()
+      val board = BoardComponent.create()
       val pos = Position(1, 0)
       val afterFirst = board.placeStone(pos, PlayerId.One).get
 

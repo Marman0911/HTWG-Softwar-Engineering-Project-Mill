@@ -1,6 +1,6 @@
 package controller
 
-import model.PlayerId
+import model.player.PlayerId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
