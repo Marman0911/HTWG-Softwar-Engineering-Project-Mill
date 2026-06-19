@@ -41,8 +41,15 @@ class PlacingPhaseSpec extends AnyFlatSpec with Matchers:
     val filledState =
       phase.handleInput("a1", state).getOrElse(state)
 
-    phase.handleInput("a1", filledState) shouldBe Left("Position occupied.")
-
+    filledState match {
+      case state: model.game.GameState =>
+        phase.handleInput("a1", state) match {
+          case scala.util.Failure(e) => e.getMessage shouldBe "Position occupied."
+          case scala.util.Success(_) => fail("Test fehlgeschlagen: Feld hätte besetzt sein müssen!")
+        }
+  case _ => 
+    fail("filledState war kein gültiger GameState")
+}
   it should "return the correct prompt" in:
     val phase = PlacingPhase(successParsePos)
 

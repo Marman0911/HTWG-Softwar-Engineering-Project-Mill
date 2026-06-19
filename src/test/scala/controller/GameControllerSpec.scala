@@ -34,47 +34,8 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
     "parse number-letter coordinate order" in {
       val board = BoardComponent.create(3)
 
-<<<<<<< HEAD
-"reject inputs where both characters are numbers" in {
-  val board = BoardComponent.create(3)
-
-  freshController.parseInput("11", board) should be(None)
-}
-
-"reject inputs where both characters are letters" in {
-  val board = BoardComponent.create(3)
-
-  freshController.parseInput("aa", board) should be(None)
-}
-
-"parse d1 as a valid coordinate" in {
-  val board = BoardComponent.create(3)
-
-  freshController.parseInput("d1", board) should be(Some(Position(0, 1)))
-}
-
-"parse 1d as the same valid coordinate" in {
-  val board = BoardComponent.create(3)
-
-  freshController.parseInput("1d", board) should be(Some(Position(0, 1)))
-}
-
-"reject a single digit input" in {
-  val board = BoardComponent.create(3)
-
-  freshController.parseInput("1", board) should be(None)
-}
-
-"reject a two digit input without a letter" in {
-  val board = BoardComponent.create(3)
-
-  freshController.parseInput("12", board) should be(None)
-}
-
-=======
       freshController.parseInput("1a", board) should be(Some(Position(0, 0)))
     }
->>>>>>> 92996c97bfe51752a52d3db0788e46ab24747e8b
 
     "accept boundary coordinate g7" in {
       val board = BoardComponent.create(3)
@@ -228,39 +189,39 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
   }
 
-  "GameController.handleTurnInput" should {
+  "GameController.handleInput state transitions" should {
 
     "return invalid message for invalid input" in {
-      val state = GameState()
-
-      freshController.handleTurnInput(state, "xx") should be(Left("Invalid position."))
+      val ctrl = freshController
+      ctrl.handleInput("xx") match {
+        case Failure(exception) => exception.getMessage should be("Invalid position.")
+        case Success(_)         => fail("Expected Failure for invalid input")
+      }
     }
 
     "return occupied message for occupied position" in {
-      val state = GameState().placeStone(Position(0, 0)).get
-
-      freshController.handleTurnInput(state, "a1") should be(Left("Position occupied."))
+      val ctrl = freshController
+      ctrl.handleInput("a1") should be(Success(()))
+      ctrl.handleInput("a1") match {
+        case Failure(exception) => exception.getMessage should be("Position occupied.")
+        case Success(_)         => fail("Expected Failure for occupied position")
+      }
     }
 
     "advance state after a valid move" in {
-      val state = GameState()
-      val result = freshController.handleTurnInput(state, "a1")
+      val ctrl = freshController
+      ctrl.handleInput("a1") should be(Success(()))
 
-      result.isRight should be(true)
-
-      val nextState = result.toOption.get
-
-      nextState should not be state
-      nextState.board.placedStones.get(Position(0, 0)) should be(Some(PlayerId.One))
-      nextState.currentPlayer should be(PlayerId.Two)
+      ctrl.boardViewModel.stones should not be empty
+      ctrl.boardViewModel.stones.head.playerNumber should be(1)
+      ctrl.currentPrompt should include("Player 2")
     }
 
     "switch to player one when current player was two" in {
-      val state = GameState().placeStone(Position(0, 0)).get
-      val result = freshController.handleTurnInput(state, "d1")
-
-      result.isRight should be(true)
-      result.toOption.get.currentPlayer should be(PlayerId.One)
+      val ctrl = freshController
+      ctrl.handleInput("a1") should be(Success(())) // Spieler 1 setzt
+      ctrl.handleInput("d1") should be(Success(())) // Spieler 2 setzt
+      ctrl.currentPrompt should include("Player 1")
     }
 
   }

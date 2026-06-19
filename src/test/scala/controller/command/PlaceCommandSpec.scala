@@ -22,7 +22,7 @@ class PlaceCommandSpec extends AnyFlatSpec with Matchers:
 
     val result = cmd.execute(state)
 
-    result shouldBe defined
+    result.isSuccess shouldBe true
 
     val newState = result.get
 
@@ -51,7 +51,10 @@ class PlaceCommandSpec extends AnyFlatSpec with Matchers:
 
     val cmd = PlaceCommand(validPos)
 
-    cmd.execute(occupiedState) shouldBe None
+    cmd.execute(occupiedState) match {
+      case scala.util.Failure(e) => e.getMessage shouldBe "Position occupied."
+      case scala.util.Success(_) => fail("Test fehlgeschlagen: Zug auf besetztes Feld hätte scheitern müssen!")
+    }
 
   it should "allow placing on another empty position" in:
     val occupiedState = PlaceCommand(validPos).execute(state).get
