@@ -15,6 +15,7 @@ import scala.io.StdIn.readLine
 import tui.TuiRunner
 
 @main def millApp(): Unit =
+  //hier wird der gemeinsame Controller erstellt
   val controller = GameController(GameComponent.standard)
 
   val tuiThread = new Thread(new Runnable:

@@ -26,6 +26,42 @@ def update(): Unit =
 
 "GameController.parseInput" should {
 
+"reject inputs where both characters are numbers" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("11", board) should be(None)
+}
+
+"reject inputs where both characters are letters" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("aa", board) should be(None)
+}
+
+"parse d1 as a valid coordinate" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("d1", board) should be(Some(Position(0, 1)))
+}
+
+"parse 1d as the same valid coordinate" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("1d", board) should be(Some(Position(0, 1)))
+}
+
+"reject a single digit input" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("1", board) should be(None)
+}
+
+"reject a two digit input without a letter" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("12", board) should be(None)
+}
+
 
 "parse a standard letter-number coordinate" in {
   val board = BoardComponent.create(3)
