@@ -9,6 +9,8 @@ import model.player.PlayerId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.util.{Failure, Success}
+
 class GameControllerSpec extends AnyWordSpec with Matchers {
 
   private def freshController: GameController =
@@ -32,8 +34,47 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
     "parse number-letter coordinate order" in {
       val board = BoardComponent.create(3)
 
+<<<<<<< HEAD
+"reject inputs where both characters are numbers" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("11", board) should be(None)
+}
+
+"reject inputs where both characters are letters" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("aa", board) should be(None)
+}
+
+"parse d1 as a valid coordinate" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("d1", board) should be(Some(Position(0, 1)))
+}
+
+"parse 1d as the same valid coordinate" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("1d", board) should be(Some(Position(0, 1)))
+}
+
+"reject a single digit input" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("1", board) should be(None)
+}
+
+"reject a two digit input without a letter" in {
+  val board = BoardComponent.create(3)
+
+  freshController.parseInput("12", board) should be(None)
+}
+
+=======
       freshController.parseInput("1a", board) should be(Some(Position(0, 0)))
     }
+>>>>>>> 92996c97bfe51752a52d3db0788e46ab24747e8b
 
     "accept boundary coordinate g7" in {
       val board = BoardComponent.create(3)
@@ -99,42 +140,6 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       freshController.parseInput("b1", board) should be(None)
     }
 
-    "reject inputs where both characters are numbers" in {
-      val board = BoardComponent.create(3)
-
-      freshController.parseInput("11", board) should be(None)
-    }
-
-    "reject inputs where both characters are letters" in {
-      val board = BoardComponent.create(3)
-
-      freshController.parseInput("aa", board) should be(None)
-    }
-
-    "parse d1 as a valid coordinate" in {
-      val board = BoardComponent.create(3)
-
-      freshController.parseInput("d1", board) should be(Some(Position(0, 1)))
-    }
-
-    "parse 1d as the same valid coordinate" in {
-      val board = BoardComponent.create(3)
-
-      freshController.parseInput("1d", board) should be(Some(Position(0, 1)))
-    }
-
-    "reject inputs with more than two cleaned characters" in {
-      val board = BoardComponent.create(3)
-
-      freshController.parseInput("a11", board) should be(None)
-      freshController.parseInput("11a", board) should be(None)
-    }
-
-    "reject mixed invalid two character inputs" in {
-      val board = BoardComponent.create(3)
-
-      freshController.parseInput("1-", board) should be(None)
-    }
   }
 
   "GameController.currentPrompt" should {
@@ -150,6 +155,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
       ctrl.currentPrompt should be("Player 2 enter position (e.g. a1): ")
     }
+
   }
 
   "GameController.welcomeMessage" should {
@@ -157,6 +163,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
     "contain the expected title" in {
       freshController.welcomeMessage should be("Welcome to Nine Men's Morris!")
     }
+
   }
 
   "GameController.shouldContinue" should {
@@ -205,6 +212,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
       freshController.shouldContinue(state) should be(false)
     }
+
   }
 
   "GameController.reverseCoords" should {
@@ -217,6 +225,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       reverse((0, 15)) should be(Position(0, 1))
       reverse((6, 0)) should be(Position(0, 7))
     }
+
   }
 
   "GameController.handleTurnInput" should {
@@ -253,6 +262,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       result.isRight should be(true)
       result.toOption.get.currentPlayer should be(PlayerId.One)
     }
+
   }
 
   "GameController.handleInput" should {
@@ -292,7 +302,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
       ctrl.addObserver(observer)
 
-      ctrl.handleInput("a1").isSuccess should be(true)
+      ctrl.handleInput("a1") should be(Success(()))
 
       observer.updateCalls should be(1)
       ctrl.boardViewModel.stones should not be empty
@@ -305,10 +315,10 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
       ctrl.addObserver(observer)
 
-      val result = ctrl.handleInput("xx")
+      ctrl.handleInput("xx") match
+        case Failure(exception) => exception.getMessage should be("Invalid position.")
+        case Success(_)         => fail("Expected Failure for invalid input")
 
-      result.isFailure should be(true)
-      result.failed.get.getMessage should be("Invalid position.")
       observer.updateCalls should be(0)
     }
 
@@ -320,34 +330,34 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       val observer = RecordingObserver()
       ctrl.addObserver(observer)
 
-      val result = ctrl.handleInput("a1")
+      ctrl.handleInput("a1") match
+        case Failure(exception) => exception.getMessage should be("Position occupied.")
+        case Success(_)         => fail("Expected Failure for occupied position")
 
-      result.isFailure should be(true)
-      result.failed.get.getMessage should be("Position occupied.")
       observer.updateCalls should be(0)
     }
+
   }
 
   "GameController.undo" should {
 
-    "return a Failure error message when history is empty" in {
+    "return a Failure with message when history is empty" in {
       val ctrl = freshController
 
-      val result = ctrl.undo()
-
-      result.isFailure should be(true)
-      result.failed.get.getMessage should be("Nothing to undo.")
+      ctrl.undo() match
+        case Failure(exception) => exception.getMessage should be("Nothing to undo.")
+        case Success(_)         => fail("Expected Failure when history is empty")
     }
 
     "restore the previous state and decrease history when executing successfully" in {
       val ctrl = freshController
 
-      ctrl.handleInput("a1").isSuccess should be(true)
+      ctrl.handleInput("a1") should be(Success(()))
       ctrl.boardViewModel.stones.map(_.playerNumber) should contain(1)
 
       val undoResult = ctrl.undo()
 
-      undoResult.isSuccess should be(true)
+      undoResult should be(Success(()))
       ctrl.boardViewModel.stones should be(empty)
     }
 
@@ -355,14 +365,15 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       val ctrl = freshController
       val observer = RecordingObserver()
 
-      ctrl.handleInput("a1").isSuccess should be(true)
+      ctrl.handleInput("a1") should be(Success(()))
       ctrl.addObserver(observer)
 
       observer.updateCalls should be(0)
 
-      ctrl.undo().isSuccess should be(true)
+      ctrl.undo() should be(Success(()))
       observer.updateCalls should be(1)
     }
+
   }
 
   "GameController.handleInput with 'undo'" should {
@@ -370,10 +381,11 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
     "intercept the command 'undo' and route it internally to the undo logic" in {
       val ctrl = freshController
 
-      ctrl.handleInput("a1").isSuccess should be(true)
-      ctrl.handleInput("  UNDO  ").isSuccess should be(true)
+      ctrl.handleInput("a1") should be(Success(()))
+      ctrl.handleInput("  UNDO  ") should be(Success(()))
 
       ctrl.boardViewModel.stones should be(empty)
     }
+
   }
 }

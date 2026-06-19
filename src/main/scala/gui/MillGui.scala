@@ -4,43 +4,53 @@ import controller.GameController
 import controller.GameObserver
 
 import scala.swing.*
+import scala.util.{Failure, Success}
 import java.awt.{BasicStroke, Color, Dimension, Font, Graphics2D, RenderingHints}
 import java.awt.event.{ActionEvent, ActionListener, MouseAdapter, MouseEvent, WindowAdapter, WindowEvent}
 import java.util.concurrent.CountDownLatch
 import javax.swing.{Timer, WindowConstants}
 
-
-
-//Gui ist Observer
+// Gui ist Observer.
 object MillGui extends GameObserver:
 
+  // Gui benutzt Controller.
+  private var controller =
+    GameController()
 
-
-
-// Gui benutzt Controller
-  private var controller = GameController()
-
-
-
-
-  private val closed = CountDownLatch(1)
+  private val closed =
+    CountDownLatch(1)
 
   private def bigButton(text: String): Button =
     new Button(text):
       font = new Font("Arial", Font.BOLD, 20)
       preferredSize = new Dimension(320, 50)
 
-  private val playButton = bigButton("Play")
-  private val quitButtonMenu = bigButton("Quit")
+  private val playButton =
+    bigButton("Play")
 
-  private val playerVsPlayerButton = bigButton("Spieler 1 gegen Spieler 2")
-  private val playerVsAiButton = bigButton("Gegen KI spielen")
-  private val aiVsAiButton = bigButton("KI gegen KI zuschauen")
-  private val backToMenuButton = bigButton("Zurück")
+  private val quitButtonMenu =
+    bigButton("Quit")
 
-  private val gameMenuButton = new Button("Menü")
-  private val undoButtonGame = new Button("Undo")
-  private val quitButtonGame = new Button("Quit")
+  private val playerVsPlayerButton =
+    bigButton("Spieler 1 gegen Spieler 2")
+
+  private val playerVsAiButton =
+    bigButton("Gegen KI spielen")
+
+  private val aiVsAiButton =
+    bigButton("KI gegen KI zuschauen")
+
+  private val backToMenuButton =
+    bigButton("Zurück")
+
+  private val gameMenuButton =
+    new Button("Menü")
+
+  private val undoButtonGame =
+    new Button("Undo")
+
+  private val quitButtonGame =
+    new Button("Quit")
 
   private val modeMessageLabel = new Label(""):
     font = new Font("Arial", Font.BOLD, 16)
@@ -49,8 +59,11 @@ object MillGui extends GameObserver:
   private val messageLabel = new Label("Klicke auf einen grünen Punkt."):
     font = new Font("Arial", Font.BOLD, 16)
 
-  private val boardPanel = new MillBoardPanel
-  private val turnPanel = new TurnPanel
+  private val boardPanel =
+    new MillBoardPanel
+
+  private val turnPanel =
+    new TurnPanel
 
   private val mainMenuPanel = new BoxPanel(Orientation.Vertical):
     preferredSize = new Dimension(700, 720)
@@ -174,40 +187,34 @@ object MillGui extends GameObserver:
   private def startPlayerVsPlayer(): Unit =
     controller = GameController()
 
-    // Gui meldet sich beim Controller - Gui wird darüber informiert wenn 
-    //sich beim Controller was ändert
+    // Gui meldet sich beim Controller.
+    // Gui wird informiert, wenn sich beim Controller etwas ändert.
     controller.addObserver(this)
-
 
     messageLabel.text = "Klicke auf einen grünen Punkt."
     refresh()
     showPanel(gamePanel)
 
   private def playMove(position: String): Unit =
-
-    //GUI benutzt Controller - beim Klicken auf ein punkt
-    //GIU setzt den Punkt nicht selbst sondern fragt den Controller
+    // GUI benutzt Controller beim Klicken auf einen Punkt.
+    // GUI setzt den Punkt nicht selbst, sondern fragt den Controller.
     controller.handleInput(position) match
+      case Failure(error) =>
+        messageLabel.text = error.getMessage
 
-
-      case Left(errorMessage) =>
-        messageLabel.text = errorMessage
-
-      case Right(_) =>
+      case Success(_) =>
         messageLabel.text = "Stein gesetzt."
 
     refresh()
 
   private def undoMove(): Unit =
-
-    //GUI benutzt Controller - beim Klick auf Undo
-    //GUI macht Undo nicht selbst sondern fragt den Controller
+    // GUI benutzt Controller beim Klick auf Undo.
+    // GUI macht Undo nicht selbst, sondern fragt den Controller.
     controller.handleInput("undo") match
+      case Failure(error) =>
+        messageLabel.text = error.getMessage
 
-      case Left(errorMessage) =>
-        messageLabel.text = errorMessage
-
-      case Right(_) =>
+      case Success(_) =>
         messageLabel.text = "Zug rückgängig gemacht."
 
     refresh()
@@ -216,14 +223,10 @@ object MillGui extends GameObserver:
     boardPanel.repaint()
     turnPanel.repaint()
 
-  //wenn der Controller die Gui informiert ruft er update auf. 
+  // Wenn der Controller die Gui informiert, ruft er update auf.
   override def update(): Unit =
     refresh()
 
-
-
-
-//Änderung
   private def openGui(startPanel: Component): Unit =
     Swing.onEDT:
       blinkTimer.start()
@@ -235,8 +238,8 @@ object MillGui extends GameObserver:
   def startWith(sharedController: GameController): Unit =
     controller = sharedController
 
-    // Gui meldet sich beim Controller - Gui wird darüber informiert wenn 
-    //sich beim Controller was ändert
+    // Gui bekommt hier den gemeinsamen Controller.
+    // Gui meldet sich beim Controller als Observer an.
     controller.addObserver(this)
 
     messageLabel.text = "Klicke auf einen grünen Punkt."
@@ -251,7 +254,8 @@ object MillGui extends GameObserver:
     preferredSize = new Dimension(560, 460)
     background = new Color(20, 70, 20)
 
-    private var glowOn = true
+    private var glowOn =
+      true
 
     private val points = Seq(
       (0, 0), (3, 0), (6, 0),
@@ -285,11 +289,16 @@ object MillGui extends GameObserver:
 
     private def freePointAt(mouseX: Int, mouseY: Int): Option[(Int, Int)] =
       freePoints.find: point =>
-        val dx = mouseX - pixelX(point._1)
-        val dy = mouseY - pixelY(point._2)
+        val dx =
+          mouseX - pixelX(point._1)
+
+        val dy =
+          mouseY - pixelY(point._2)
+
         dx * dx + dy * dy <= 25 * 25
 
-    private def boardLength: Int = 320
+    private def boardLength: Int =
+      320
 
     private def startX: Int =
       (size.width - boardLength) / 2
@@ -306,7 +315,10 @@ object MillGui extends GameObserver:
     override def paintComponent(g: Graphics2D): Unit =
       super.paintComponent(g)
 
-      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+      g.setRenderingHint(
+        RenderingHints.KEY_ANTIALIASING,
+        RenderingHints.VALUE_ANTIALIAS_ON
+      )
 
       drawWood(g)
       drawLines(g)
@@ -357,8 +369,11 @@ object MillGui extends GameObserver:
 
     private def drawFreePoints(g: Graphics2D): Unit =
       freePoints.foreach: point =>
-        val x = pixelX(point._1)
-        val y = pixelY(point._2)
+        val x =
+          pixelX(point._1)
+
+        val y =
+          pixelY(point._2)
 
         if glowOn then
           g.setColor(new Color(80, 255, 80, 130))
@@ -373,12 +388,20 @@ object MillGui extends GameObserver:
 
     private def drawStones(g: Graphics2D): Unit =
       controller.boardViewModel.stones.foreach: stone =>
-        val gridX = stone.col / 5
-        val gridY = stone.row / 2
+        val gridX =
+          stone.col / 5
 
-        val x = pixelX(gridX)
-        val y = pixelY(gridY)
-        val stoneSize = 38
+        val gridY =
+          stone.row / 2
+
+        val x =
+          pixelX(gridX)
+
+        val y =
+          pixelY(gridY)
+
+        val stoneSize =
+          38
 
         if stone.playerNumber == 1 then
           g.setColor(new Color(240, 230, 180))
@@ -399,7 +422,10 @@ object MillGui extends GameObserver:
     override def paintComponent(g: Graphics2D): Unit =
       super.paintComponent(g)
 
-      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+      g.setRenderingHint(
+        RenderingHints.KEY_ANTIALIASING,
+        RenderingHints.VALUE_ANTIALIAS_ON
+      )
 
       g.setColor(new Color(15, 65, 15))
       g.fillRoundRect(70, 8, size.width - 140, 64, 20, 20)
@@ -407,12 +433,19 @@ object MillGui extends GameObserver:
       g.setColor(Color.WHITE)
       g.setFont(new Font("Arial", Font.BOLD, 24))
 
-      val player = controller.boardViewModel.nextPlayerNumber
+      val player =
+        controller.boardViewModel.nextPlayerNumber
+
       g.drawString(s"Am Zug: Spieler $player", 130, 50)
 
-      val tokenX = size.width - 150
-      val tokenY = 40
-      val tokenSize = 40
+      val tokenX =
+        size.width - 150
+
+      val tokenY =
+        40
+
+      val tokenSize =
+        40
 
       if player == 1 then
         g.setColor(new Color(240, 230, 180))
