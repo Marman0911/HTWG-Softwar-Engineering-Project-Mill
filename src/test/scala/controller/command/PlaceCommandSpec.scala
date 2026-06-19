@@ -5,6 +5,7 @@ import model.game.GameState
 import model.player.PlayerId
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import scala.util.{Failure, Success}
 
 class PlaceCommandSpec extends AnyFlatSpec with Matchers:
 
@@ -40,20 +41,20 @@ class PlaceCommandSpec extends AnyFlatSpec with Matchers:
 
     val result = cmd.execute(state)
 
-    result shouldBe defined
+    result.isSuccess shouldBe true
 
     val newState = result.get
 
     newState.currentPlayer should not equal state.currentPlayer
 
-  it should "return None when placing on an occupied position" in:
+  it should "return Failure when placing on an occupied position" in:
     val occupiedState = PlaceCommand(validPos).execute(state).get
 
     val cmd = PlaceCommand(validPos)
 
     cmd.execute(occupiedState) match {
-      case scala.util.Failure(e) => e.getMessage shouldBe "Position occupied."
-      case scala.util.Success(_) => fail("Test fehlgeschlagen: Zug auf besetztes Feld hätte scheitern müssen!")
+      case Failure(e) => e.getMessage shouldBe "Position occupied."
+      case Success(_) => fail("Test fehlgeschlagen: Zug auf besetztes Feld hätte scheitern müssen!")
     }
 
   it should "allow placing on another empty position" in:
@@ -61,4 +62,4 @@ class PlaceCommandSpec extends AnyFlatSpec with Matchers:
 
     val cmd = PlaceCommand(otherPos)
 
-    cmd.execute(occupiedState) shouldBe defined
+    cmd.execute(occupiedState).isSuccess shouldBe true
