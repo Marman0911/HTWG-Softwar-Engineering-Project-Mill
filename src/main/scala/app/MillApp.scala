@@ -25,4 +25,6 @@ import tui.TuiRunner
   tuiThread.setDaemon(true)
   tuiThread.start()
 
+
+//Hier wird Controller an GUI übergeben. 
   MillGui.startWith(controller)

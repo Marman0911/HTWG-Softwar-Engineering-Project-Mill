@@ -6,6 +6,8 @@ import model.player.Player
 import model.player.PlayerComponent
 import model.player.PlayerId
 
+//Erstellt das Spiel, Board und 2 spieler
+
 object GameComponent:
 
   def create(variant: GameVariant): GameState =
