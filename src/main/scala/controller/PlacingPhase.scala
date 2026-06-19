@@ -3,16 +3,13 @@ package controller
 import model.game.GameState
 import model.board.Board
 import model.board.Position
-import controller.GameMessages
-import controller.GamePhase
-import controller.MovingPhase
 
 class PlacingPhase(parsePos: (String, Board) => Option[Position]) extends GamePhase:
 
-  def handleInput(input: String, state: GameState): Either[String, GameState] =
+  def handleInput(input: String, state: GameState): Either[String, GameCommand] =
     parsePos(input, state.board) match
       case None      => Left(GameMessages.invalidPosition)
-      case Some(pos) => state.placeStone(pos).toRight(GameMessages.occupiedPosition)
+      case Some(pos) => Right(PlaceCommand(pos))
 
   def prompt(state: GameState): String =
     GameMessages.promptFor(state.currentPlayer)

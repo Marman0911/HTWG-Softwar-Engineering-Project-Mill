@@ -26,7 +26,7 @@ final case class GameException(message: String) extends Exception(message)
 class GameController(initialState: GameState = GameState()) extends Observable:
 
   private var state: GameState = initialState
-  private var history: List[GameState] = Nil
+  private var commandHistory: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
   def isGameOver: Boolean = !shouldContinue(state)
@@ -42,25 +42,33 @@ class GameController(initialState: GameState = GameState()) extends Observable:
         phase.handleInput(input, state) match
           case Left(message) =>
             Failure(GameException(message))
-          case Right(nextState) =>
-            history = state :: history
-            state = nextState
-            phase = phase.next(state)
-            notifyObservers()
-            Success(())
+          case Right(command) =>
+            command.execute(state) match
+              case Failure(exception) =>
+                Failure(exception)
+              case Success(nextState) =>
+                commandHistory = command :: commandHistory
+                state = nextState
+                phase = phase.next(state)
+                notifyObservers()
+                Success(())
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage
 
   def undo(): Try[Unit] =
-    history match
+    commandHistory match
       case Nil =>
         Failure(GameException("Nothing to undo."))
-      case prev :: rest =>
-        state = prev
-        history = rest
-        notifyObservers()
-        Success(())
+      case lastCommand :: rest =>
+        lastCommand.undo(state) match
+          case Failure(exception) =>
+            Failure(exception)
+          case Success(prevState) =>
+            state = prevState
+            commandHistory = rest
+            notifyObservers()
+            Success(())
 
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
@@ -83,14 +91,3 @@ class GameController(initialState: GameState = GameState()) extends Observable:
         case None => None
         case Some(rowNum) =>
           reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
-
-  private[controller] def handleTurnInput(state: GameState, input: String): Either[String, GameState] =
-    parseInput(input, state.board) match
-      case None =>
-        Left(GameMessages.invalidPosition)
-      case Some(pos) =>
-        state.placeStone(pos) match
-          case None =>
-            Left(GameMessages.occupiedPosition)
-          case Some(nextState) =>
-            Right(nextState)
