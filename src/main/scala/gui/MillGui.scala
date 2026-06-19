@@ -138,7 +138,7 @@ object MillGui extends GameObserver:
 
   backToMenuButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
-      modeMessageLabel.text = ""
+      modeMessageLabel.text_=("") // FIX: Scala 3 Setter-Syntax
       showPanel(mainMenuPanel)
   )
 
@@ -149,12 +149,12 @@ object MillGui extends GameObserver:
 
   playerVsAiButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
-      modeMessageLabel.text = "KI kommt später. Dieser Modus ist vorbereitet."
+      modeMessageLabel.text_=("KI kommt später. Dieser Modus ist vorbereitet.") // FIX: Scala 3 Setter-Syntax
   )
 
   aiVsAiButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
-      modeMessageLabel.text = "KI gegen KI kommt später. Dieser Modus ist vorbereitet."
+      modeMessageLabel.text_=("KI gegen KI kommt später. Dieser Modus ist vorbereitet.") // FIX: Scala 3 Setter-Syntax
   )
 
   gameMenuButton.peer.addActionListener(new ActionListener:
@@ -178,11 +178,11 @@ object MillGui extends GameObserver:
   )
 
   private def showPanel(panel: Component): Unit =
-    frame.contents = panel
-    frame.pack()
-    frame.centerOnScreen()
-    frame.peer.revalidate()
-    frame.peer.repaint()
+      frame.contents_=(panel) // FIX: Expliziter Setter-Aufruf für den Frame
+      frame.pack()
+      frame.centerOnScreen()
+      frame.peer.revalidate()
+      frame.peer.repaint()
 
   private def startPlayerVsPlayer(): Unit =
     controller = GameController()
@@ -191,7 +191,7 @@ object MillGui extends GameObserver:
     // Gui wird informiert, wenn sich beim Controller etwas ändert.
     controller.addObserver(this)
 
-    messageLabel.text = "Klicke auf einen grünen Punkt."
+    messageLabel.text_=("Klicke auf einen grünen Punkt.") // FIX: Scala 3 Setter-Syntax
     refresh()
     showPanel(gamePanel)
 
@@ -200,10 +200,10 @@ object MillGui extends GameObserver:
     // GUI setzt den Punkt nicht selbst, sondern fragt den Controller.
     controller.handleInput(position) match
       case Failure(error) =>
-        messageLabel.text = error.getMessage
+        messageLabel.text_=(error.getMessage) // FIX: Scala 3 Setter-Syntax
 
       case Success(_) =>
-        messageLabel.text = "Stein gesetzt."
+        messageLabel.text_=("Stein gesetzt.") // FIX: Scala 3 Setter-Syntax
 
     refresh()
 
@@ -212,10 +212,10 @@ object MillGui extends GameObserver:
     // GUI macht Undo nicht selbst, sondern fragt den Controller.
     controller.handleInput("undo") match
       case Failure(error) =>
-        messageLabel.text = error.getMessage
+        messageLabel.text_=(error.getMessage) // FIX: Scala 3 Setter-Syntax
 
       case Success(_) =>
-        messageLabel.text = "Zug rückgängig gemacht."
+        messageLabel.text_=("Zug rückgängig gemacht.") // FIX: Scala 3 Setter-Syntax
 
     refresh()
 
@@ -242,7 +242,7 @@ object MillGui extends GameObserver:
     // Gui meldet sich beim Controller als Observer an.
     controller.addObserver(this)
 
-    messageLabel.text = "Klicke auf einen grünen Punkt."
+    messageLabel.text_=("Klicke auf einen grünen Punkt.") // FIX: Scala 3 Setter-Syntax
     refresh()
     openGui(gamePanel)
 
@@ -277,7 +277,7 @@ object MillGui extends GameObserver:
           playMove(GuiCoordinateMapper.toPosition(gridX, gridY))
 
         case None =>
-          messageLabel.text = "Bitte auf einen freien grünen Punkt klicken."
+          messageLabel.text_=("Bitte auf einen freien grünen Punkt klicken.") // FIX: Scala 3 Setter-Syntax
 
     private def occupiedPoints: Set[(Int, Int)] =
       controller.boardViewModel.stones.map: stone =>

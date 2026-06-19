@@ -1,49 +1,31 @@
-package app
+package tui
 
 import controller.GameController
-import gui.MillGui
-import model.game.GameComponent
 import scala.io.StdIn.readLine
-import tui.TuiRunner
+import view.BoardView
+import model.game.GameComponent
+import scala.util.{Success, Failure} // NEU: Import für die Try-Monade
 
-object MillApp:
+class TuiRunner(controller: GameController, readInput: () => String):
+  val view = BoardView(controller)
+  controller.addObserver(view)
 
-  def createController(): GameController =
-    GameController(GameComponent.standard)
-
-  def createTuiThread(
-      controller: GameController,
-      readInput: () => String
-  ): Thread =
-    val tuiThread =
-      new Thread(new Runnable:
-        override def run(): Unit =
-          TuiRunner(controller, readInput).run()
-      )
-
-    tuiThread.setDaemon(true)
-    tuiThread
-
-  def start(
-      controller: GameController,
-      tuiThread: Thread,
-      startGui: GameController => Unit
-  ): Unit =
-    tuiThread.start()
-    startGui(controller)
-
-  def startApp(
-      readInput: () => String = () => readLine(),
-      startGui: GameController => Unit = MillGui.startWith,
-      createThread: (GameController, () => String) => Thread = createTuiThread
-  ): Unit =
-    val controller =
-      createController()
-
-    val tuiThread =
-      createThread(controller, readInput)
-
-    start(controller, tuiThread, startGui)
-
-@main def millApp(): Unit =
-  MillApp.startApp()
+  def run(): Unit =
+    println(controller.welcomeMessage)
+    println(view.renderWithCoords(controller.boardViewModel))
+    while !controller.isGameOver do
+      print(controller.currentPrompt)
+      val input = readInput()
+      
+      input.trim.toLowerCase match
+        case "undo" =>
+          // NEU: controller.undo liefert jetzt ein Try
+          controller.undo() match
+            case Failure(exception) => println(exception.getMessage)
+            case Success(_)         => () // Alles super, Observer aktualisiert die View automatisch
+            
+        case other => // FIX: Der leere Case-Pfeil wurde repariert
+          // NEU: controller.handleInput liefert jetzt ein Try
+          controller.handleInput(input) match
+            case Failure(exception) => println(exception.getMessage)
+            case Success(_)         => () // Alles super

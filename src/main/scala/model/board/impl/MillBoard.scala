@@ -48,3 +48,7 @@ private[board] case class MillBoard private (
   def placeStone(pos: Position, player: PlayerId): Option[Board] =
     if stones.getOrElse(pos, None).isDefined then None
     else Some(copy(stones = stones.updated(pos, Some(player))))
+
+  def removeStone(pos: Position): Option[Board] =
+    if stones.getOrElse(pos, None).isEmpty then None
+    else Some(copy(stones = stones.updated(pos, None)))

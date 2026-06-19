@@ -3,6 +3,7 @@ package controller
 import model.game.GameState
 import model.board.Board
 import model.board.Position
+import controller.command.*
 
 class PlacingPhase(parsePos: (String, Board) => Option[Position]) extends GamePhase:
 

@@ -19,6 +19,9 @@ trait GameState:
 
   def placeStone(pos: Position): Option[GameState]
 
+  // HIER: Das brauchen wir zwingend für das Undo-System!
+  def removeStone(pos: Position): Option[GameState] 
+
 
 object GameState:
 

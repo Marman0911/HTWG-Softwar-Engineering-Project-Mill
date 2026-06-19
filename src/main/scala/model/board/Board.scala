@@ -12,6 +12,8 @@ trait Board:
 
   def placedStones: Map[Position, PlayerId]
 
+  def removeStone(pos: Position): Option[Board]
+
   def occupiedCount: Int =
     placedStones.size
 

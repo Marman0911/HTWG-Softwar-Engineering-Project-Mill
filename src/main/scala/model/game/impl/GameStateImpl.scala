@@ -25,3 +25,10 @@ private[game] case class GameStateImpl(
         board = newBoard,
         currentPlayer = nextPlayer
       )
+
+  def removeStone(pos: Position): Option[GameState] =
+      board.removeStone(pos).map: newBoard =>
+        copy(
+          board = newBoard,
+          currentPlayer = nextPlayer // Wechselt wieder zurück zum Spieler davor
+        )

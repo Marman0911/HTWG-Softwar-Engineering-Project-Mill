@@ -3,6 +3,7 @@ package controller
 import model.game.GameState
 import model.board.Board
 import model.board.Position
+import controller.command.GameCommand // NEU: Command importieren
 
 import scala.util.{Try, Success, Failure}
 
@@ -16,17 +17,17 @@ trait Observable:
     _observers = observer :: _observers
 
   def removeObserver(observer: GameObserver): Unit =
-    observers = _observers.filterNot( eq observer)
+    _observers = _observers.filterNot(_ eq observer) // FIX: Tippfehler korrigiert
 
   protected def notifyObservers(): Unit =
-    observers.foreach(.update())
+    _observers.foreach(_.update()) // FIX: Tippfehler korrigiert
 
 final case class GameException(message: String) extends Exception(message)
 
 class GameController(initialState: GameState = GameState()) extends Observable:
 
   private var state: GameState = initialState
-  private var history: List[GameState] = Nil
+  private var history: List[GameCommand] = Nil // NEU: Speichert jetzt Commands, keine States!
   private var phase: GamePhase = PlacingPhase(parseInput)
 
   def isGameOver: Boolean = !shouldContinue(state)
@@ -36,18 +37,23 @@ class GameController(initialState: GameState = GameState()) extends Observable:
   def currentPrompt: String = phase.prompt(state)
 
   def handleInput(input: String): Try[Unit] =
-    input.trim.toLowerCase match
-      case "undo" => undo()
-      case _ =>
-        phase.handleInput(input, state) match
-          case Left(message) =>
-            Failure(GameException(message))
-          case Right(nextState) =>
-            history = state :: history
-            state = nextState
-            phase = phase.next(state)
-            notifyObservers()
-            Success(())
+      input.trim.toLowerCase match
+        case "undo" => undo()
+        case _ =>
+          phase.handleInput(input, state) match
+            case Left(message) => 
+              Failure(GameException(message))
+            // HIER: Wir schreiben explizit ": GameCommand" dahinter!
+            case Right(command: GameCommand) =>
+              command.execute(state) match
+                case Failure(exception) => 
+                  Failure(exception)
+                case Success(nextState) =>
+                  history = command :: history
+                  state = nextState
+                  phase = phase.next(state)
+                  notifyObservers()
+                  Success(())
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage
@@ -56,11 +62,20 @@ class GameController(initialState: GameState = GameState()) extends Observable:
     history match
       case Nil =>
         Failure(GameException("Nothing to undo."))
-      case prev :: rest =>
-        state = prev
-        history = rest
-        notifyObservers()
-        Success(())
+      case command :: rest =>
+        // NEU: Wir jagen den aktuellen State rückwärts durch das Command
+        command.undo(state) match
+          case Failure(exception) => 
+            Failure(exception)
+          case Success(prevState) =>
+            state = prevState
+            history = rest
+            // Da sich der Zustand geändert hat, müssen wir die Phase basierend auf dem alten Zustand neu berechnen
+            phase = if state.board.occupiedCount < state.board.boardSize * 8 
+                    then PlacingPhase(parseInput) 
+                    else MovingPhase(parseInput)
+            notifyObservers()
+            Success(())
 
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
@@ -83,14 +98,3 @@ class GameController(initialState: GameState = GameState()) extends Observable:
         case None => None
         case Some(rowNum) =>
           reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
-
-  private[controller] def handleTurnInput(state: GameState, input: String): Either[String, GameState] =
-    parseInput(input, state.board) match
-      case None =>
-        Left(GameMessages.invalidPosition)
-      case Some(pos) =>
-        state.placeStone(pos) match
-          case None =>
-            Left(GameMessages.occupiedPosition)
-          case Some(nextState) =>
-            Right(nextState)
