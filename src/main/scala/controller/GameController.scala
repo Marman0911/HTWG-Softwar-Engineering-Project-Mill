@@ -3,7 +3,8 @@ package controller
 import model.game.GameState
 import model.board.Board
 import model.board.Position
-import scala.util.Try
+
+import scala.util.{Try, Success, Failure}
 
 trait GameObserver:
   def update(): Unit
@@ -20,6 +21,8 @@ trait Observable:
   protected def notifyObservers(): Unit =
     _observers.foreach(_.update())
 
+final case class GameException(message: String) extends Exception(message)
+
 class GameController(initialState: GameState = GameState()) extends Observable:
 
   private var state: GameState = initialState
@@ -31,31 +34,33 @@ class GameController(initialState: GameState = GameState()) extends Observable:
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
 
   def currentPrompt: String = phase.prompt(state)
-  
-  def handleInput(input: String): Either[String, Unit] =
+
+  def handleInput(input: String): Try[Unit] =
     input.trim.toLowerCase match
       case "undo" => undo()
       case _ =>
         phase.handleInput(input, state) match
-          case Left(message)    => Left(message)
+          case Left(message) =>
+            Failure(GameException(message))
           case Right(nextState) =>
             history = state :: history
             state = nextState
             phase = phase.next(state)
             notifyObservers()
-            Right(())
+            Success(())
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage
 
-  def undo(): Either[String, Unit] =
-  history match
-    case Nil          => Left("Nothing to undo.")
-    case prev :: rest =>
-      state = prev
-      history = rest
-      notifyObservers()
-      Right(())
+  def undo(): Try[Unit] =
+    history match
+      case Nil =>
+        Failure(GameException("Nothing to undo."))
+      case prev :: rest =>
+        state = prev
+        history = rest
+        notifyObservers()
+        Success(())
 
   private[controller] def shouldContinue(state: GameState): Boolean =
     !state.player1.hasLost && !state.player2.hasLost
@@ -65,14 +70,7 @@ class GameController(initialState: GameState = GameState()) extends Observable:
 
   private[controller] def parseInput(input: String, board: Board): Option[Position] =
     val clean = input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
-    for
-      _      <- Option.when(clean.length >= 2)(())
-      letter  = if clean.head.isLetter then clean.head else clean.last
-      number  = if clean.head.isLetter then clean.tail else clean.init
-      colIdx  = letter - 'a'
-      rowNum <- Try(number.toInt).toOption   // Try statt toIntOption – kein try-catch
-      pos    <- reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
-    yield pos
+
     if clean.length < 2 then None
     else
       val (letter, number) =
@@ -90,11 +88,9 @@ class GameController(initialState: GameState = GameState()) extends Observable:
     parseInput(input, state.board) match
       case None =>
         Left(GameMessages.invalidPosition)
-
       case Some(pos) =>
         state.placeStone(pos) match
           case None =>
             Left(GameMessages.occupiedPosition)
-
           case Some(nextState) =>
             Right(nextState)

@@ -9,355 +9,344 @@ import model.player.PlayerId
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.util.{Failure, Success}
+
 class GameControllerSpec extends AnyWordSpec with Matchers {
 
-private def freshController: GameController =
-GameController()
+  private def freshController: GameController =
+    GameController()
 
-private class RecordingObserver extends GameObserver {
-var updateCalls = 0
+  private class RecordingObserver extends GameObserver {
+    var updateCalls = 0
 
+    def update(): Unit =
+      updateCalls = updateCalls + 1
+  }
 
-def update(): Unit =
-  updateCalls = updateCalls + 1
+  "GameController.parseInput" should {
 
+    "parse a standard letter-number coordinate" in {
+      val board = BoardComponent.create(3)
 
-}
+      freshController.parseInput("a1", board) should be(Some(Position(0, 0)))
+    }
 
-"GameController.parseInput" should {
+    "parse number-letter coordinate order" in {
+      val board = BoardComponent.create(3)
 
+      freshController.parseInput("1a", board) should be(Some(Position(0, 0)))
+    }
 
-"parse a standard letter-number coordinate" in {
-  val board = BoardComponent.create(3)
+    "accept boundary coordinate g7" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("a1", board) should be(Some(Position(0, 0)))
-}
+      freshController.parseInput("g7", board) should be(Some(Position(0, 4)))
+    }
 
-"parse number-letter coordinate order" in {
-  val board = BoardComponent.create(3)
+    "sanitize whitespace and symbols" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("1a", board) should be(Some(Position(0, 0)))
-}
+      freshController.parseInput("  A1!!  ", board) should be(Some(Position(0, 0)))
+    }
 
-"accept boundary coordinate g7" in {
-  val board = BoardComponent.create(3)
+    "return None for too short inputs" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("g7", board) should be(Some(Position(0, 4)))
-}
+      freshController.parseInput("", board) should be(None)
+      freshController.parseInput("a", board) should be(None)
+    }
 
-"sanitize whitespace and symbols" in {
-  val board = BoardComponent.create(3)
+    "return None when row number is not numeric" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("  A1!!  ", board) should be(Some(Position(0, 0)))
-}
+      freshController.parseInput("ab", board) should be(None)
+    }
 
-"return None for too short inputs" in {
-  val board = BoardComponent.create(3)
+    "return None for out-of-range column" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("", board) should be(None)
-  freshController.parseInput("a", board) should be(None)
-}
+      freshController.parseInput("z1", board) should be(None)
+    }
 
-"return None when row number is not numeric" in {
-  val board = BoardComponent.create(3)
+    "return None for out-of-range row" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("ab", board) should be(None)
-}
+      freshController.parseInput("a0", board) should be(None)
+      freshController.parseInput("a9", board) should be(None)
+    }
 
-"return None for out-of-range column" in {
-  val board = BoardComponent.create(3)
+    "reject the immediate row boundaries around the valid range" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("z1", board) should be(None)
-}
+      freshController.parseInput("d0", board) should be(None)
+      freshController.parseInput("d8", board) should be(None)
+    }
 
-"return None for out-of-range row" in {
-  val board = BoardComponent.create(3)
+    "reject the immediate column boundary above the valid range" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("a0", board) should be(None)
-  freshController.parseInput("a9", board) should be(None)
-}
+      freshController.parseInput("h4", board) should be(None)
+    }
 
-"reject the immediate row boundaries around the valid range" in {
-  val board = BoardComponent.create(3)
+    "accept exact board boundaries" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("d0", board) should be(None)
-  freshController.parseInput("d8", board) should be(None)
-}
+      freshController.parseInput("a7", board) should be(Some(Position(0, 6)))
+      freshController.parseInput("g1", board) should be(Some(Position(0, 2)))
+    }
 
-"reject the immediate column boundary above the valid range" in {
-  val board = BoardComponent.create(3)
+    "return None for coordinates that are not board intersections" in {
+      val board = BoardComponent.create(3)
 
-  freshController.parseInput("h4", board) should be(None)
-}
+      freshController.parseInput("b1", board) should be(None)
+    }
 
-"accept exact board boundaries" in {
-  val board = BoardComponent.create(3)
+  }
 
-  freshController.parseInput("a7", board) should be(Some(Position(0, 6)))
-  freshController.parseInput("g1", board) should be(Some(Position(0, 2)))
-}
+  "GameController.currentPrompt" should {
 
-"return None for coordinates that are not board intersections" in {
-  val board = BoardComponent.create(3)
+    "render player one prompt at game start" in {
+      freshController.currentPrompt should be("Player 1 enter position (e.g. a1): ")
+    }
 
-  freshController.parseInput("b1", board) should be(None)
-}
+    "render player two prompt after player one moves" in {
+      val ctrl = freshController
 
+      ctrl.handleInput("a1")
 
-}
+      ctrl.currentPrompt should be("Player 2 enter position (e.g. a1): ")
+    }
 
-"GameController.currentPrompt" should {
+  }
 
+  "GameController.welcomeMessage" should {
 
-"render player one prompt at game start" in {
-  freshController.currentPrompt should be("Player 1 enter position (e.g. a1): ")
-}
+    "contain the expected title" in {
+      freshController.welcomeMessage should be("Welcome to Nine Men's Morris!")
+    }
 
-"render player two prompt after player one moves" in {
-  val ctrl = freshController
+  }
 
-  ctrl.handleInput("a1")
+  "GameController.shouldContinue" should {
 
-  ctrl.currentPrompt should be("Player 2 enter position (e.g. a1): ")
-}
+    "be true while both players have not lost" in {
+      val state = GameComponent.create(
+        BoardComponent.create(),
+        PlayerComponent.create(PlayerId.One),
+        PlayerComponent.create(PlayerId.Two),
+        PlayerId.One
+      )
 
+      freshController.shouldContinue(state) should be(true)
+    }
 
-}
+    "be false when player one has lost" in {
+      val lostP1 = PlayerComponent.create(
+        PlayerId.One,
+        stonesInHand = 2,
+        stonesOnBoard = 0
+      )
 
-"GameController.welcomeMessage" should {
+      val state = GameComponent.create(
+        BoardComponent.create(),
+        lostP1,
+        PlayerComponent.create(PlayerId.Two),
+        PlayerId.One
+      )
 
+      freshController.shouldContinue(state) should be(false)
+    }
 
-"contain the expected title" in {
-  freshController.welcomeMessage should be("Welcome to Nine Men's Morris!")
-}
+    "be false when player two has lost" in {
+      val lostP2 = PlayerComponent.create(
+        PlayerId.Two,
+        stonesInHand = 2,
+        stonesOnBoard = 0
+      )
 
+      val state = GameComponent.create(
+        BoardComponent.create(),
+        PlayerComponent.create(PlayerId.One),
+        lostP2,
+        PlayerId.One
+      )
 
-}
+      freshController.shouldContinue(state) should be(false)
+    }
 
-"GameController.shouldContinue" should {
+  }
 
+  "GameController.reverseCoords" should {
 
-"be true while both players have not lost" in {
-  val state = GameComponent.create(
-    BoardComponent.create(),
-    PlayerComponent.create(PlayerId.One),
-    PlayerComponent.create(PlayerId.Two),
-    PlayerId.One
-  )
+    "contain known reverse mappings" in {
+      val board = BoardComponent.create(3)
+      val reverse = freshController.reverseCoords(board)
 
-  freshController.shouldContinue(state) should be(true)
-}
+      reverse((0, 0)) should be(Position(0, 0))
+      reverse((0, 15)) should be(Position(0, 1))
+      reverse((6, 0)) should be(Position(0, 7))
+    }
 
-"be false when player one has lost" in {
-  val lostP1 = PlayerComponent.create(
-    PlayerId.One,
-    stonesInHand = 2,
-    stonesOnBoard = 0
-  )
+  }
 
-  val state = GameComponent.create(
-    BoardComponent.create(),
-    lostP1,
-    PlayerComponent.create(PlayerId.Two),
-    PlayerId.One
-  )
+  "GameController.handleTurnInput" should {
 
-  freshController.shouldContinue(state) should be(false)
-}
+    "return invalid message for invalid input" in {
+      val state = GameState()
 
-"be false when player two has lost" in {
-  val lostP2 = PlayerComponent.create(
-    PlayerId.Two,
-    stonesInHand = 2,
-    stonesOnBoard = 0
-  )
+      freshController.handleTurnInput(state, "xx") should be(Left("Invalid position."))
+    }
 
-  val state = GameComponent.create(
-    BoardComponent.create(),
-    PlayerComponent.create(PlayerId.One),
-    lostP2,
-    PlayerId.One
-  )
+    "return occupied message for occupied position" in {
+      val state = GameState().placeStone(Position(0, 0)).get
 
-  freshController.shouldContinue(state) should be(false)
-}
+      freshController.handleTurnInput(state, "a1") should be(Left("Position occupied."))
+    }
 
+    "advance state after a valid move" in {
+      val state = GameState()
+      val result = freshController.handleTurnInput(state, "a1")
 
-}
+      result.isRight should be(true)
 
-"GameController.reverseCoords" should {
+      val nextState = result.toOption.get
 
+      nextState should not be state
+      nextState.board.placedStones.get(Position(0, 0)) should be(Some(PlayerId.One))
+      nextState.currentPlayer should be(PlayerId.Two)
+    }
 
-"contain known reverse mappings" in {
-  val board = BoardComponent.create(3)
-  val reverse = freshController.reverseCoords(board)
+    "switch to player one when current player was two" in {
+      val state = GameState().placeStone(Position(0, 0)).get
+      val result = freshController.handleTurnInput(state, "d1")
 
-  reverse((0, 0)) should be(Position(0, 0))
-  reverse((0, 15)) should be(Position(0, 1))
-  reverse((6, 0)) should be(Position(0, 7))
-}
+      result.isRight should be(true)
+      result.toOption.get.currentPlayer should be(PlayerId.One)
+    }
 
+  }
 
-}
+  "GameController.handleInput" should {
 
-"GameController.handleTurnInput" should {
+    "report isGameOver true when a player has lost" in {
+      val lostP1 = PlayerComponent.create(
+        PlayerId.One,
+        stonesInHand = 2,
+        stonesOnBoard = 0
+      )
 
+      val terminalState = GameComponent.create(
+        BoardComponent.create(),
+        lostP1,
+        PlayerComponent.create(PlayerId.Two),
+        PlayerId.One
+      )
 
-"return invalid message for invalid input" in {
-  val state = GameState()
+      val ctrl = GameController(terminalState)
+      val observer = RecordingObserver()
 
-  freshController.handleTurnInput(state, "xx") should be(Left("Invalid position."))
-}
+      ctrl.addObserver(observer)
 
-"return occupied message for occupied position" in {
-  val state = GameState().placeStone(Position(0, 0)).get
+      ctrl.isGameOver should be(true)
+      observer.updateCalls should be(0)
+    }
 
-  freshController.handleTurnInput(state, "a1") should be(Left("Position occupied."))
-}
+    "evaluate continue condition independently of input" in {
+      val ctrl = freshController
 
-"advance state after a valid move" in {
-  val state = GameState()
-  val result = freshController.handleTurnInput(state, "a1")
+      ctrl.isGameOver should be(false)
+    }
 
-  result.isRight should be(true)
+    "notify observers after a valid move" in {
+      val ctrl = freshController
+      val observer = RecordingObserver()
 
-  val nextState = result.toOption.get
+      ctrl.addObserver(observer)
 
-  nextState should not be state
-  nextState.board.placedStones.get(Position(0, 0)) should be(Some(PlayerId.One))
-  nextState.currentPlayer should be(PlayerId.Two)
-}
+      ctrl.handleInput("a1") should be(Success(()))
 
-"switch to player one when current player was two" in {
-  val state = GameState().placeStone(Position(0, 0)).get
-  val result = freshController.handleTurnInput(state, "d1")
+      observer.updateCalls should be(1)
+      ctrl.boardViewModel.stones should not be empty
+      ctrl.boardViewModel.stones.head.playerNumber should be(1)
+    }
 
-  result.isRight should be(true)
-  result.toOption.get.currentPlayer should be(PlayerId.One)
-}
+    "return Failure for invalid input without notifying observers" in {
+      val ctrl = freshController
+      val observer = RecordingObserver()
 
+      ctrl.addObserver(observer)
 
-}
+      ctrl.handleInput("xx") match
+        case Failure(exception) => exception.getMessage should be("Invalid position.")
+        case Success(_)         => fail("Expected Failure for invalid input")
 
-"GameController.handleInput" should {
+      observer.updateCalls should be(0)
+    }
 
+    "return Failure for occupied position without notifying observers" in {
+      val ctrl = freshController
 
-"report isGameOver true when a player has lost" in {
-  val lostP1 = PlayerComponent.create(
-    PlayerId.One,
-    stonesInHand = 2,
-    stonesOnBoard = 0
-  )
+      ctrl.handleInput("a1")
 
-  val terminalState = GameComponent.create(
-    BoardComponent.create(),
-    lostP1,
-    PlayerComponent.create(PlayerId.Two),
-    PlayerId.One
-  )
+      val observer = RecordingObserver()
+      ctrl.addObserver(observer)
 
-  val ctrl = GameController(terminalState)
-  val observer = RecordingObserver()
+      ctrl.handleInput("a1") match
+        case Failure(exception) => exception.getMessage should be("Position occupied.")
+        case Success(_)         => fail("Expected Failure for occupied position")
 
-  ctrl.addObserver(observer)
+      observer.updateCalls should be(0)
+    }
 
-  ctrl.isGameOver should be(true)
-  observer.updateCalls should be(0)
-}
+  }
 
-"evaluate continue condition independently of input" in {
-  val ctrl = freshController
+  "GameController.undo" should {
 
-  ctrl.isGameOver should be(false)
-}
+    "return a Failure with message when history is empty" in {
+      val ctrl = freshController
 
-"notify observers after a valid move" in {
-  val ctrl = freshController
-  val observer = RecordingObserver()
+      ctrl.undo() match
+        case Failure(exception) => exception.getMessage should be("Nothing to undo.")
+        case Success(_)         => fail("Expected Failure when history is empty")
+    }
 
-  ctrl.addObserver(observer)
+    "restore the previous state and decrease history when executing successfully" in {
+      val ctrl = freshController
 
-  ctrl.handleInput("a1") should be(Right(()))
+      ctrl.handleInput("a1") should be(Success(()))
+      ctrl.boardViewModel.stones.map(_.playerNumber) should contain(1)
 
-  observer.updateCalls should be(1)
-  ctrl.boardViewModel.stones should not be empty
-  ctrl.boardViewModel.stones.head.playerNumber should be(1)
-}
+      val undoResult = ctrl.undo()
 
-"return Left for invalid input without notifying observers" in {
-  val ctrl = freshController
-  val observer = RecordingObserver()
+      undoResult should be(Success(()))
+      ctrl.boardViewModel.stones should be(empty)
+    }
 
-  ctrl.addObserver(observer)
+    "trigger notifyObservers upon a successful undo execution" in {
+      val ctrl = freshController
+      val observer = RecordingObserver()
 
-  ctrl.handleInput("xx") should be(Left("Invalid position."))
-  observer.updateCalls should be(0)
-}
+      ctrl.handleInput("a1") should be(Success(()))
+      ctrl.addObserver(observer)
 
-"return Left for occupied position without notifying observers" in {
-  val ctrl = freshController
+      observer.updateCalls should be(0)
 
-  ctrl.handleInput("a1")
+      ctrl.undo() should be(Success(()))
+      observer.updateCalls should be(1)
+    }
 
-  val observer = RecordingObserver()
-  ctrl.addObserver(observer)
+  }
 
-  ctrl.handleInput("a1") should be(Left("Position occupied."))
-  observer.updateCalls should be(0)
-}
+  "GameController.handleInput with 'undo'" should {
 
+    "intercept the command 'undo' and route it internally to the undo logic" in {
+      val ctrl = freshController
 
-}
+      ctrl.handleInput("a1") should be(Success(()))
+      ctrl.handleInput("  UNDO  ") should be(Success(()))
 
-"GameController.undo" should {
+      ctrl.boardViewModel.stones should be(empty)
+    }
 
-
-"return a Left error message when history is empty" in {
-  val ctrl = freshController
-
-  ctrl.undo() should be(Left("Nothing to undo."))
-}
-
-"restore the previous state and decrease history when executing successfully" in {
-  val ctrl = freshController
-
-  ctrl.handleInput("a1") should be(Right(()))
-  ctrl.boardViewModel.stones.map(_.playerNumber) should contain(1)
-
-  val undoResult = ctrl.undo()
-
-  undoResult should be(Right(()))
-  ctrl.boardViewModel.stones should be(empty)
-}
-
-"trigger notifyObservers upon a successful undo execution" in {
-  val ctrl = freshController
-  val observer = RecordingObserver()
-
-  ctrl.handleInput("a1") should be(Right(()))
-  ctrl.addObserver(observer)
-
-  observer.updateCalls should be(0)
-
-  ctrl.undo() should be(Right(()))
-  observer.updateCalls should be(1)
-}
-
-
-}
-
-"GameController.handleInput with 'undo'" should {
-
-
-"intercept the command 'undo' and route it internally to the undo logic" in {
-  val ctrl = freshController
-
-  ctrl.handleInput("a1") should be(Right(()))
-  ctrl.handleInput("  UNDO  ") should be(Right(()))
-
-  ctrl.boardViewModel.stones should be(empty)
-}
-
-
-}
+  }
 }
