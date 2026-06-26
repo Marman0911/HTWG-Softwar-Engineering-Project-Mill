@@ -30,6 +30,9 @@ class GameController @Inject() () extends IController:
   private var history: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
+  private[controller] def this(initalState: GameState) = 
+    this()
+    this.state = initalState
   def isGameOver: Boolean = !shouldContinue(state)
 
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)

@@ -1,5 +1,6 @@
-package gui
+package view.gui
 
+import view.gui.GuiCoordinateMapper
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
