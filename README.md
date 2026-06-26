@@ -1,169 +1,213 @@
-﻿# HTWG-Software-Engineering-Project: Mill
+# Mühle – Nine Men's Morris
 
-[![Scala CI](https://github.com/Marman0911/HTWG-Softwar-Engineering-Project-Mill/actions/workflows/scala.yml/badge.svg?branch=main)](https://github.com/Marman0911/HTWG-Softwar-Engineering-Project-Mill/actions/workflows/scala.yml)
-[![Coverage Status](https://coveralls.io/repos/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill/badge.svg?branch=main&service=github)](https://coveralls.io/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill?branch=main)
+Dieses Projekt ist eine Umsetzung des Brettspiels **Mühle** (*Nine Men's Morris*) in Scala 3.
 
-Nine Men's Morris (Mühle) als Scala-Projekt im Rahmen des Software-Engineering-Kurses an der HTWG Konstanz.
+Das Spiel wurde im Rahmen des Software-Engineering-Projekts entwickelt. Es besitzt eine grafische Benutzeroberfläche, eine textbasierte Ansicht im Terminal sowie eine klare Trennung zwischen Spiellogik, Darstellung und Steuerung.
 
 ---
 
-## Was das Programm macht
+## Spiel starten
 
-Zwei Spieler spielen abwechselnd Mühle in der Konsole (TUI). Jeder Spieler gibt eine Koordinate ein (z.B. `a1`), um einen Stein auf dem Spielfeld zu platzieren. Das Spiel endet, wenn ein Spieler weniger als 3 Steine hat.
+Voraussetzungen:
 
-### Spielstart
+* Java 17 oder neuer
+* sbt
 
-```
+Im Hauptordner des Projekts:
+
+```powershell
+sbt clean test
 sbt run
 ```
 
-### Koordinatensystem
+Nach `sbt run` öffnet sich die grafische Oberfläche.
 
-Das Spielfeld wird mit Buchstaben (Spalten `a`–`g`) und Zahlen (Zeilen `1`–`7`) adressiert:
+---
 
+## Spielablauf
+
+### 1. Setzphase
+
+Zu Beginn besitzt jeder Spieler neun Steine.
+
+* Spieler 1 spielt mit hellen Steinen.
+* Spieler 2 spielt mit dunklen Steinen.
+* Abwechselnd wird ein Stein auf einen freien grünen Punkt gesetzt.
+* Links und rechts neben dem Spielbrett wird angezeigt, wie viele Steine jeder Spieler noch setzen kann.
+
+### 2. Mühle bilden
+
+Eine Mühle besteht aus drei eigenen Steinen in einer erlaubten Reihe.
+
+Wenn ein Spieler eine Mühle bildet:
+
+* bleibt er zunächst am Zug,
+* muss er einen gegnerischen Stein auswählen,
+* der ausgewählte gegnerische Stein wird vom Brett entfernt.
+
+Steine, die selbst Teil einer gegnerischen Mühle sind, dürfen nur entfernt werden, wenn keine anderen gegnerischen Steine außerhalb einer Mühle vorhanden sind.
+
+### 3. Bewegungsphase
+
+Sobald beide Spieler alle Steine gesetzt haben, beginnt die Bewegungsphase.
+
+So wird ein Stein bewegt:
+
+1. Einen eigenen Stein anklicken.
+2. Der ausgewählte Stein wird markiert.
+3. Einen freien, direkt verbundenen Nachbarpunkt anklicken.
+4. Der Stein wird verschoben und der andere Spieler ist am Zug.
+
+### 4. Springen
+
+Hat ein Spieler nur noch genau drei Steine auf dem Brett, darf er mit seinen Steinen auf jeden freien Punkt springen und ist nicht mehr auf direkte Nachbarfelder beschränkt.
+
+### 5. Spielende
+
+Ein Spieler verliert, wenn:
+
+* er weniger als drei Steine besitzt oder
+* er keinen legalen Zug mehr machen kann.
+
+---
+
+## Bedienung der GUI
+
+| Aktion                       | Bedienung                                          |
+| ---------------------------- | -------------------------------------------------- |
+| Spiel starten                | `Play` → `Spieler 1 gegen Spieler 2`               |
+| Anleitung schließen          | `X` oben rechts oder `Spiel starten`               |
+| Stein setzen                 | Freien grünen Punkt anklicken                      |
+| Stein bewegen                | Eigenen Stein anklicken, danach Zielfeld anklicken |
+| Gegnerischen Stein entfernen | Nach einer Mühle gegnerischen Stein anklicken      |
+| Letzten Zug zurücknehmen     | Button `Undo`                                      |
+| Zurück zum Menü              | Button `Menü`                                      |
+| Programm schließen           | Button `Quit`                                      |
+
+---
+
+## Bedienung im Terminal
+
+Neben der GUI gibt es eine textbasierte Ansicht.
+
+### Stein setzen
+
+```text
+a1
 ```
-1 +--------------+--------------+
-  |              |              |
-2 |    +---------+---------+    |
-  |    |         |         |    |
-3 |    |    +----+----+    |    |
-  |    |    |         |    |    |
-  +----+----+         +----+----+
-  |    |    |         |    |    |
-5 |    |    +----+----+    |    |
-  |    |         |         |    |
-6 |    +---------+---------+    |
-  |              |              |
-7 +--------------+--------------+
-  a    b    c    d    e    f    g
+
+### Stein bewegen
+
+```text
+a1 d1
+```
+
+Dabei ist:
+
+```text
+a1 = Startposition
+d1 = Zielposition
+```
+
+### Zug zurücknehmen
+
+```text
+undo
 ```
 
 ---
 
-## Architektur – MVC
+## Projektstruktur
 
-Das Projekt folgt strikt der MVC-Architektur nach den Vorlesungsfolien:
-
+```text
+src/main/scala
+├── app
+│   └── MillApp.scala
+├── controller
+│   ├── GameController.scala
+│   ├── GamePhase.scala
+│   ├── PlacingPhase.scala
+│   ├── MovingPhase.scala
+│   ├── RemovingPhase.scala
+│   └── command
+│       ├── PlaceCommand.scala
+│       ├── MoveCommand.scala
+│       └── RemoveCommand.scala
+├── gui
+│   ├── MillGui.scala
+│   └── GuiCoordinateMapper.scala
+├── model
+│   ├── board
+│   ├── game
+│   └── player
+├── tui
+│   └── TuiRunner.scala
+└── view
+    └── BoardView.scala
 ```
-TUI / GUI (View)
-   │  registriert sich als Observer
-   │  ruft controller.handleInput(input) auf
-   ▼
-GameController (Controller = Observable)
-   │  ändert den State im Model
-   │  sendet parameterloses update()-Signal an Observer
-   ▼
-GameState / MillBoard / Player (Model)
-   │  hält alle persistenten Daten
-   │  enthält nur lokale Logik auf eigenen Daten
-```
 
-**Datenfluss nach einer Eingabe:**
-1. View → `controller.handleInput("a1")`
-2. Controller → `state.placeStone(pos)` (Model)
-3. Controller → `notifyObservers()` (leeres Signal)
-4. View → `controller.boardViewModel` (Pull, kein Model-Typ)
-5. View rendert `BoardViewModel` (reines Controller-DTO)
+---
 
-### Schichten und ihre Pakete
+## Architektur
 
-| Paket | Inhalt |
-|---|---|
-| `model` | `GameState`, `MillBoard`, `Player`, `PlayerId`, `PlayerFactory` |
-| `controller` | `GameController`, `Observable`, `GameObserver`, `BoardViewMapper`, `BoardViewModel`, `GameMessages` |
-| `view` | `BoardView`, `StoneSymbolStrategy` |
-| `tui` | `TuiRunner`, `@main millGame` |
+Das Projekt ist in mehrere Bereiche aufgeteilt:
 
-### Designentscheidungen
+* **Model**
+  Enthält die Spiellogik, das Brett, die Positionen und die Spieler.
 
-- **Controller ist Observable** – die View registriert sich, der Controller sendet nur ein Signal ohne Daten
-- **View macht Pull** – `BoardView.update()` ruft `controller.boardViewModel` auf, kein Model-Import in der View
-- **BoardViewModel als DTO** – entkoppelt View vom Model, enthält nur primitive Typen und Int-Werte
-- **StoneSymbolStrategy** – Strategy Pattern, Darstellung der Steine austauschbar (Zahlen `1`/`2` oder Buchstaben `X`/`O`)
-- **TuiRunner** – testbare Klasse, `@main` ist nur der Einstiegspunkt
+* **Controller**
+  Nimmt Eingaben entgegen, führt Spielzüge aus und verwaltet die Spielphasen.
+
+* **GUI / TUI / View**
+  Stellen den Spielzustand grafisch oder im Terminal dar.
+
+* **Commands**
+  Jeder Spielzug wird als Command gespeichert. Dadurch kann ein Zug über `Undo` rückgängig gemacht werden.
+
+* **Observer**
+  Die GUI und die Terminalansicht werden informiert, wenn sich der Spielzustand verändert.
 
 ---
 
 ## Tests
 
+Die Tests können mit folgendem Befehl ausgeführt werden:
+
+```powershell
+sbt clean test
 ```
-sbt test          # Unit Tests
-sbt coverageReport  # Testabdeckung
-sbt stryker       # Mutationstests
-```
+
+Getestet werden unter anderem:
+
+* Erstellen von Spielern und Spielbrettern
+* Setzen von Steinen
+* Eingabe von Koordinaten
+* Wechsel zwischen Spielern
+* Bewegungsphase
+* Controller-Verhalten
+* Undo-Funktion
+* Darstellung des Brettes
 
 ---
 
-## TODOs
+## Bekannte Erweiterungsmöglichkeiten
 
-### KI-Gegner (Einzelspielermodus)
+Mögliche zukünftige Erweiterungen:
 
-- [ ] `PlayerType`-Enum einführen (`Human`, `AI`)
-- [ ] `AIStrategy`-Trait definieren mit `selectMove(state): Position`
-- [ ] Implementierungen:
-  - [ ] `RandomStrategy` – wählt zufälligen freien Platz
-  - [ ] `GreedyStrategy` – bevorzugt Mühlen-bildende Züge
-  - [ ] `MinimaxStrategy` – Minimax mit Alpha-Beta-Pruning für optimales Spiel
-- [ ] Controller bekommt optionalen `AIStrategy`-Parameter, übernimmt Zug automatisch wenn KI am Zug ist
-
-### GUI
-
-- [ ] Neue View-Implementierung `GuiView extends GameObserver` neben TUI
-- [ ] Ideen zur Umsetzung:
-  - [ ] **ScalaFX** – nativer Scala-Wrapper für JavaFX, einfache Einbindung
-  - [ ] **Swing** – klassisch, leichtgewichtig, gut dokumentiert
-  - [ ] **Web-UI** – Scala.js Frontend, Controller bleibt identisch
-- [ ] Spielfeld als klickbares Board, Steine per Mausklick setzen
-- [ ] Animationen für Steinplatzierung und Mühlenbildung
-- [ ] Spieler-Namen eingeben am Start
-- [ ] Anzeige der verbleibenden Steine pro Spieler
-
+* Spielmodus gegen eine KI
+* KI gegen KI
+* bessere Animationen beim Setzen und Bewegen
+* Anzeige bereits gebildeter Mühlen
+* Speichern und Laden eines Spielstands
+* Anzeige eines Spielverlaufs
+* bessere Fehlermeldungen direkt im GUI
 
 ---
 
-## Was noch fehlt
+## Team
 
-### 1. Kern-Datenstrukturen
+Software-Engineering-Projekt
+HTWG Konstanz
+Manuel Beinlich 
+Marin Corluka
 
-**`MillBoard` erweitern:**
-- Aktuell rendert das Board nur die leere Struktur – es kennt keine **Spielfelder (Nodes/Positions)** mit Koordinaten
-- Benötigt wird: eine Repräsentation der **24 Schnittpunkte** (z.B. als `Map[Position, Option[PlayerId]]`)
-- Logik für: Stein setzen, Stein bewegen, Stein entfernen
-- Erkennung einer **Mühle** (3 Steine in einer Reihe)
-
-**Neue Datei `GameState.scala` (empfohlen):**
-- Kapselt den gesamten Spielzustand: aktuelles Board, beide Spieler, aktive Phase, aktueller Spieler
-- Enthält die Spielphasen: `Placing` → `Moving` → `Flying`
-- Unterscheidung ob gerade eine Mühle geschlossen wurde (→ Entfernen-Phase)
-
----
-
-### 2. Spiellogik
-
-Entweder in `GameState` oder eigene Datei `GameLogic.scala`:
-- Validierung: Ist ein Zug erlaubt? (Nur benachbarte Felder beim Bewegen)
-- Mühlen-Erkennung nach jedem Zug
-- Gewinnbedingung prüfen (`hasLost`)
-- Zustandsübergänge (nächste Phase/nächster Spieler)
-
-Die **Nachbarschafts-Beziehungen** der 24 Positionen müssen kodiert werden (als Graph/Map).
-
----
-
-### 3. Text-UI (Main.scala überarbeiten)
-
-- Game-Loop: Spielzustand anzeigen → Eingabe lesen → verarbeiten → wiederholen
-- Board-Rendering mit Steinpositionen (z.B. `W`/`B` statt `+`)
-- Eingabeformat definieren (z.B. `"a1"` für Position oder `"a1 b2"` für Zug)
-- Fehlermeldungen bei ungültigen Eingaben
-
----
-
-### Empfohlene Dateistruktur
-
-| Datei | Inhalt |
-|---|---|
-| board.scala | `MillBoard` + Positionen + Rendering mit Steinen |
-| player.scala | `Player`, `PlayerId` (bereits gut) |
-| `GameState.scala` | Spielzustand, Phasen, Spiellogik |
-| Main.scala | Game-Loop, Text-UI |
