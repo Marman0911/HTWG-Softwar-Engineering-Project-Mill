@@ -1,12 +1,12 @@
-package tui
+package view.tui
 
-import controller.GameController
+import controller.IController
 import scala.io.StdIn.readLine
 import view.BoardView
 import model.game.GameComponent
 import scala.util.{Success, Failure} // NEU: Import für die Try-Monade
 
-class TuiRunner(controller: GameController, readInput: () => String):
+class TuiRunner(controller: IController, readLine: () => String):
   val view = BoardView(controller)
   controller.addObserver(view)
 
@@ -15,7 +15,7 @@ class TuiRunner(controller: GameController, readInput: () => String):
     println(view.renderWithCoords(controller.boardViewModel))
     while !controller.isGameOver do
       print(controller.currentPrompt)
-      val input = readInput()
+      val input = readLine()
       
       input.trim.toLowerCase match
         case "undo" =>

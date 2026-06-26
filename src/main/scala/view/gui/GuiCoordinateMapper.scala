@@ -1,9 +1,4 @@
-/* 
-Es wird nicht komplette GUI getestet sondern nur die beim Anklicken 
-umgewandelte Rasterposition
- */
-
-package gui
+package view.gui
 
 object GuiCoordinateMapper:
 

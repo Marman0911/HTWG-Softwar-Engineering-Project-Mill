@@ -1,33 +1,24 @@
 package app
 
-import controller.GameController
-import gui.MillGui
-import model.game.GameComponent
+import controller.{IController, GameModule}
+import view.tui.TuiRunner
+import view.gui.MillGui 
 import scala.io.StdIn.readLine
-import tui.TuiRunner
+import com.google.inject.Guice
 
 @main def millApp(): Unit =
-  // Hier wird genau ein gemeinsamer Controller erstellt.
-  val controller =
-    GameController(GameComponent.standard)
+  // 1. Guice baut den Controller
+  val injector = Guice.createInjector(new GameModule)
+  val controller = injector.getInstance(classOf[IController])
 
-  // Die TUI erhält denselben Controller.
-  val tuiRunner =
-    TuiRunner(controller, () => readLine())
-
-  // Die TUI läuft parallel, da readLine() auf Eingaben wartet.
-  val tuiThread =
-    new Thread(new Runnable:
-      override def run(): Unit =
-        tuiRunner.run()
-    )
-
-  // Beim Schließen der GUI darf der Hintergrund-Thread automatisch enden.
+  // 2. TUI kriegt den IController
+  val tuiRunner = TuiRunner(controller, () => readLine())
+  val tuiThread = new Thread(new Runnable:
+    override def run(): Unit = tuiRunner.run()
+  )
   tuiThread.setDaemon(true)
   tuiThread.start()
 
-  // Die GUI erhält exakt denselben Controller und öffnet zuerst das Menü.
-  val gui =
-    new MillGui(controller)
-
+  // 3. GUI ist jetzt eine Class und kriegt auch den IController
+  val gui = new MillGui(controller)
   gui.start()

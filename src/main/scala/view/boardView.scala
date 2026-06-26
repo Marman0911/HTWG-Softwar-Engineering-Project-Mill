@@ -1,11 +1,11 @@
 package view
 
 import controller.BoardViewModel
-import controller.GameController
+import controller.IController
 import controller.GameObserver
 import controller.StonePlacement
 
-class BoardView(controller: GameController, symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends GameObserver:
+class BoardView(controller: IController, symbolStrategy: StoneSymbolStrategy = NumberStoneSymbols) extends GameObserver:
   private val eol = sys.props("line.separator")
 
   def update(): Unit =

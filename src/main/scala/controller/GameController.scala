@@ -4,8 +4,8 @@ import model.game.GameState
 import model.board.Board
 import model.board.Position
 import controller.command.GameCommand
-
 import scala.util.{Try, Success, Failure}
+import com.google.inject.Inject
 
 trait GameObserver:
   def update(): Unit
@@ -24,9 +24,9 @@ trait Observable:
 
 final case class GameException(message: String) extends Exception(message)
 
-class GameController(initialState: GameState = GameState()) extends Observable:
+class GameController @Inject() () extends IController:
 
-  private var state: GameState = initialState
+  private var state: GameState = GameState()
   private var history: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
