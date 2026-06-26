@@ -30,9 +30,11 @@ class GameController @Inject() () extends IController:
   private var history: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
-  private[controller] def this(initalState: GameState) = 
+  def this(initalState: GameState) = 
     this()
-    this.state = initalState
+    state = initalState
+    phase = PlacingPhase(parseInput)
+  
   def isGameOver: Boolean = !shouldContinue(state)
 
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
@@ -40,24 +42,28 @@ class GameController @Inject() () extends IController:
   def currentPrompt: String = phase.prompt(state)
 
   def handleInput(input: String): Try[Unit] =
-    input.trim.toLowerCase match
-      case "undo" => undo()
-      case _ =>
-        phase.handleInput(input, state) match
-          // FIX: Aus Left(message) wird Failure(exception)
-          case Failure(exception) => 
-            Failure(GameException(exception.getMessage))
-          // FIX: Aus Right(command) wird Success(command)
-          case Success(command: GameCommand) =>
-            command.execute(state) match
+      // FIX: Wenn das Spiel vorbei ist, darf keine Eingabe mehr den State verändern!
+      if isGameOver then
+        Failure(GameException("Game is already over."))
+      else
+        input.trim.toLowerCase match
+          case "undo" => undo()
+          case _ =>
+            phase.handleInput(input, state) match
+              // FIX: Aus Left(message) wird Failure(exception)
               case Failure(exception) => 
-                Failure(exception)
-              case Success(nextState) =>
-                history = command :: history
-                state = nextState
-                phase = phase.next(state)
-                notifyObservers()
-                Success(())
+                Failure(GameException(exception.getMessage))
+              // FIX: Aus Right(command) wird Success(command)
+              case Success(command: GameCommand) =>
+                command.execute(state) match
+                  case Failure(exception) => 
+                    Failure(exception)
+                  case Success(nextState) =>
+                    history = command :: history
+                    state = nextState
+                    phase = phase.next(state)
+                    notifyObservers()
+                    Success(())
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage

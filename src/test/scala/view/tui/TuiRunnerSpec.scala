@@ -13,9 +13,19 @@ class TuiRunnerSpec extends AnyWordSpec with Matchers:
 
   "TuiRunner.run" should {
 
-    /*"exit immediately when the game is already over" in {
-      val controller = GameController()
-      controller.isGameOver.should(be(false))
+    "exit immediately when the game is already over" in {
+      val lostP1 = PlayerComponent.create(
+        PlayerId.One,
+        stonesInHand = 2,
+        stonesOnBoard = 0
+      )
+      val terminalState = GameComponent.create(
+        BoardComponent.create(),
+        lostP1,
+        PlayerComponent.create(PlayerId.Two),
+        PlayerId.One
+      )
+      val controller = GameController(terminalState)
       var inputCalled = false
       val runner = TuiRunner(
         controller,
@@ -28,7 +38,8 @@ class TuiRunnerSpec extends AnyWordSpec with Matchers:
         runner.run()
       }
       inputCalled.should(be(false))
-    }*/
+      controller.isGameOver.should(be(true))
+    }
 
     "process a valid move and continue until game over" in {
       val controller =
