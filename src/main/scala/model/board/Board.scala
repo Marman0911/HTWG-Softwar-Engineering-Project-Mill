@@ -18,3 +18,10 @@ trait Board:
     placedStones.size
 
   def placeStone(pos: Position, player: PlayerId): Option[Board]
+
+  // Verschiebt einen Stein nur dann, wenn der Startstein dem Spieler gehört
+  // und das Zielfeld frei ist. Die Nachbar-Regel prüft GameState.
+  def moveStone(from: Position, to: Position, player: PlayerId): Option[Board]
+
+  // Liefert die direkt verbundenen Positionen auf dem Mühlebrett.
+  def neighbours(pos: Position): Seq[Position]

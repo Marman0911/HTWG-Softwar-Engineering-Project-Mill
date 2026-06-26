@@ -15,7 +15,6 @@ private[board] object MillBoard:
   def apply(boardSize: Int = 3): Board =
     new MillBoard(boardSize, emptyStones(boardSize))
 
-
 private[board] case class MillBoard private (
     boardSize: Int,
     stones: Map[Position, Option[PlayerId]]
@@ -52,3 +51,45 @@ private[board] case class MillBoard private (
   def removeStone(pos: Position): Option[Board] =
     if stones.getOrElse(pos, None).isEmpty then None
     else Some(copy(stones = stones.updated(pos, None)))
+
+  def moveStone(from: Position, to: Position, player: PlayerId): Option[Board] =
+    val startBelongsToPlayer =
+      stones.getOrElse(from, None).contains(player)
+
+    val targetIsFree =
+      stones.getOrElse(to, None).isEmpty
+
+    if !startBelongsToPlayer || !targetIsFree then None
+    else
+      Some(
+        copy(
+          stones = stones
+            .updated(from, None)
+            .updated(to, Some(player))
+        )
+      )
+
+  def neighbours(pos: Position): Seq[Position] =
+    if !allPositions.contains(pos) then Seq.empty
+    else
+      val previousOnRing =
+        Position(pos.ring, (pos.slot + 7) % 8)
+
+      val nextOnRing =
+        Position(pos.ring, (pos.slot + 1) % 8)
+
+      val innerRingNeighbour =
+        if pos.slot % 2 == 1 && pos.ring > 0 then
+          Seq(Position(pos.ring - 1, pos.slot))
+        else
+          Seq.empty
+
+      val outerRingNeighbour =
+        if pos.slot % 2 == 1 && pos.ring < boardSize - 1 then
+          Seq(Position(pos.ring + 1, pos.slot))
+        else
+          Seq.empty
+
+      Seq(previousOnRing, nextOnRing) ++
+        innerRingNeighbour ++
+        outerRingNeighbour

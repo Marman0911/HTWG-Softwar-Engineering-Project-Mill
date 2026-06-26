@@ -203,7 +203,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       val ctrl = freshController
       ctrl.handleInput("a1") should be(Success(()))
       ctrl.handleInput("a1") match {
-        case Failure(exception) => exception.getMessage should be("Position occupied.")
+        case Failure(exception) => exception.getMessage shouldBe GameMessages.occupiedPosition
         case Success(_)         => fail("Expected Failure for occupied position")
       }
     }
@@ -292,7 +292,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       ctrl.addObserver(observer)
 
       ctrl.handleInput("a1") match
-        case Failure(exception) => exception.getMessage should be("Position occupied.")
+        case Failure(exception) => exception.getMessage shouldBe GameMessages.occupiedPosition
         case Success(_)         => fail("Expected Failure for occupied position")
 
       observer.updateCalls should be(0)

@@ -70,9 +70,11 @@ class GameController(initialState: GameState = GameState()) extends Observable:
           case Success(prevState) =>
             state = prevState
             history = rest
-            phase = if state.board.occupiedCount < state.board.boardSize * 8 
-                    then PlacingPhase(parseInput) 
-                    else MovingPhase(parseInput)
+            phase =
+              if state.player1.stonesInHand > 0 || state.player2.stonesInHand > 0 then
+                PlacingPhase(parseInput)
+              else
+                MovingPhase(parseInput)
             notifyObservers()
             Success(())
 

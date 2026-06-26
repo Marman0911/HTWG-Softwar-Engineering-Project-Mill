@@ -36,20 +36,32 @@ object BoardViewMapper:
     val topHalf: Seq[String] =
       (0 until boardSize).flatMap: k =>
         val h = horizRow(boardSize, k)
-        val v = if k < boardSize - 1 then vertRowOuter(boardSize, k) else vertRowInner(boardSize)
+        val v =
+          if k < boardSize - 1 then vertRowOuter(boardSize, k)
+          else vertRowInner(boardSize)
+
         Seq(h, v)
+
     topHalf ++ Seq(middleRow(boardSize)) ++ topHalf.reverse
 
   def toViewModel(state: GameState): BoardViewModel =
-    val stones = state.board.placedStones.toSeq.map:
-      case (pos, player) =>
-        val (row, col) = state.board.posCoords(pos)
-        val playerNumber = if player == PlayerId.One then 1 else 2
-        StonePlacement(row, col, playerNumber)
+    val stones =
+      state.board.placedStones.toSeq.map:
+        case (pos, player) =>
+          val (row, col) =
+            state.board.posCoords(pos)
+
+          val playerNumber =
+            if player == PlayerId.One then 1 else 2
+
+          StonePlacement(row, col, playerNumber)
 
     BoardViewModel(
       rows = boardRows(state.board.boardSize),
       boardSize = state.board.boardSize,
-      stones = stones.toSeq,
-      nextPlayerNumber = if state.currentPlayer == PlayerId.One then 1 else 2
+      stones = stones,
+      nextPlayerNumber =
+        if state.currentPlayer == PlayerId.One then 1 else 2,
+      playerOneStonesInHand = state.player1.stonesInHand,
+      playerTwoStonesInHand = state.player2.stonesInHand
     )

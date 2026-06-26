@@ -10,12 +10,8 @@ import java.awt.event.{ActionEvent, ActionListener, MouseAdapter, MouseEvent, Wi
 import java.util.concurrent.CountDownLatch
 import javax.swing.{Timer, WindowConstants}
 
-// Gui ist Observer.
-object MillGui extends GameObserver:
-
-  // Gui benutzt Controller.
-  private var controller =
-    GameController()
+// GUI ist eine View und beobachtet den gemeinsamen GameController.
+final class MillGui(controller: GameController) extends GameObserver:
 
   private val closed =
     CountDownLatch(1)
@@ -52,6 +48,14 @@ object MillGui extends GameObserver:
   private val quitButtonGame =
     new Button("Quit")
 
+  private val closeInstructionsButton =
+    new Button("X"):
+      font = new Font("Arial", Font.BOLD, 22)
+      preferredSize = new Dimension(46, 38)
+
+  private val startGameButton =
+    bigButton("Spiel starten")
+
   private val modeMessageLabel = new Label(""):
     font = new Font("Arial", Font.BOLD, 16)
     foreground = Color.RED
@@ -64,6 +68,14 @@ object MillGui extends GameObserver:
 
   private val turnPanel =
     new TurnPanel
+
+  // Zeigt links die noch nicht gesetzten Steine von Spieler 1.
+  private val playerOneReservePanel =
+    new StoneReservePanel(1)
+
+  // Zeigt rechts die noch nicht gesetzten Steine von Spieler 2.
+  private val playerTwoReservePanel =
+    new StoneReservePanel(2)
 
   private val mainMenuPanel = new BoxPanel(Orientation.Vertical):
     preferredSize = new Dimension(700, 720)
@@ -97,14 +109,57 @@ object MillGui extends GameObserver:
     contents += Swing.VStrut(20)
     contents += new FlowPanel(backToMenuButton)
 
+  private val instructionTopPanel = new BorderPanel:
+    layout += closeInstructionsButton -> BorderPanel.Position.East
+
+  private def instructionLine(text: String): Label =
+    new Label(text):
+      font = new Font("Arial", Font.PLAIN, 18)
+
+  private val instructionBody = new BoxPanel(Orientation.Vertical):
+    border = Swing.EmptyBorder(20, 45, 40, 45)
+    background = new Color(235, 205, 135)
+
+    contents += new FlowPanel(new Label("SPIELANLEITUNG"):
+      font = new Font("Arial", Font.BOLD, 34)
+    )
+    contents += Swing.VStrut(25)
+    contents += new FlowPanel(instructionLine("Setze abwechselnd deine Steine auf freie Punkte des Spielbretts."))
+    contents += Swing.VStrut(15)
+    contents += new FlowPanel(instructionLine("Drei Steine in einer Reihe bilden eine Mühle."))
+    contents += Swing.VStrut(15)
+    contents += new FlowPanel(instructionLine("Nach einer Mühle darfst du einen gegnerischen Stein entfernen."))
+    contents += Swing.VStrut(15)
+    contents += new FlowPanel(instructionLine("Nach dem Setzen ziehst du einen eigenen Stein auf einen freien Nachbarpunkt."))
+    contents += Swing.VStrut(15)
+    contents += new FlowPanel(instructionLine("Bei genau drei Steinen darfst du auf jeden freien Punkt springen."))
+    contents += Swing.VStrut(15)
+    contents += new FlowPanel(instructionLine("Du gewinnst, wenn der Gegner nur noch zwei Steine hat oder nicht ziehen kann."))
+    contents += Swing.VStrut(35)
+    contents += new FlowPanel(startGameButton)
+
+  private val instructionPanel = new BorderPanel:
+    preferredSize = new Dimension(900, 720)
+    background = new Color(20, 70, 20)
+    layout += instructionTopPanel -> BorderPanel.Position.North
+    layout += instructionBody -> BorderPanel.Position.Center
+
+  private val boardWithReservesPanel =
+    new BoxPanel(Orientation.Horizontal):
+      contents += playerOneReservePanel
+      contents += Swing.HStrut(12)
+      contents += boardPanel
+      contents += Swing.HStrut(12)
+      contents += playerTwoReservePanel
+
   private val gamePanel = new BoxPanel(Orientation.Vertical):
-    preferredSize = new Dimension(700, 720)
+    preferredSize = new Dimension(900, 720)
     border = Swing.EmptyBorder(10, 10, 10, 10)
 
     contents += new FlowPanel(new Label("Mühle"):
       font = new Font("Arial", Font.BOLD, 34)
     )
-    contents += new FlowPanel(boardPanel)
+    contents += new FlowPanel(boardWithReservesPanel)
     contents += new FlowPanel(turnPanel)
     contents += new FlowPanel(messageLabel)
     contents += new FlowPanel(gameMenuButton, undoButtonGame, quitButtonGame)
@@ -138,7 +193,7 @@ object MillGui extends GameObserver:
 
   backToMenuButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
-      modeMessageLabel.text_=("") // FIX: Scala 3 Setter-Syntax
+      modeMessageLabel.text_=("")
       showPanel(mainMenuPanel)
   )
 
@@ -147,14 +202,24 @@ object MillGui extends GameObserver:
       startPlayerVsPlayer()
   )
 
+  closeInstructionsButton.peer.addActionListener(new ActionListener:
+    override def actionPerformed(e: ActionEvent): Unit =
+      showGameBoard()
+  )
+
+  startGameButton.peer.addActionListener(new ActionListener:
+    override def actionPerformed(e: ActionEvent): Unit =
+      showGameBoard()
+  )
+
   playerVsAiButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
-      modeMessageLabel.text_=("KI kommt später. Dieser Modus ist vorbereitet.") // FIX: Scala 3 Setter-Syntax
+      modeMessageLabel.text_=("KI kommt später. Dieser Modus ist vorbereitet.")
   )
 
   aiVsAiButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
-      modeMessageLabel.text_=("KI gegen KI kommt später. Dieser Modus ist vorbereitet.") // FIX: Scala 3 Setter-Syntax
+      modeMessageLabel.text_=("KI gegen KI kommt später. Dieser Modus ist vorbereitet.")
   )
 
   gameMenuButton.peer.addActionListener(new ActionListener:
@@ -178,54 +243,57 @@ object MillGui extends GameObserver:
   )
 
   private def showPanel(panel: Component): Unit =
-      frame.contents_=(panel) // FIX: Expliziter Setter-Aufruf für den Frame
-      frame.pack()
-      frame.centerOnScreen()
-      frame.peer.revalidate()
-      frame.peer.repaint()
+    frame.contents_=(panel)
+    frame.pack()
+    frame.centerOnScreen()
+    frame.peer.revalidate()
+    frame.peer.repaint()
 
   private def startPlayerVsPlayer(): Unit =
-    controller = GameController()
+    refresh()
+    showPanel(instructionPanel)
 
-    // Gui meldet sich beim Controller.
-    // Gui wird informiert, wenn sich beim Controller etwas ändert.
-    controller.addObserver(this)
-
-    messageLabel.text_=("Klicke auf einen grünen Punkt.") // FIX: Scala 3 Setter-Syntax
+  private def showGameBoard(): Unit =
+    messageLabel.text_=("Klicke auf einen grünen Punkt.")
     refresh()
     showPanel(gamePanel)
 
-  private def playMove(position: String): Unit =
-    // GUI benutzt Controller beim Klicken auf einen Punkt.
-    // GUI setzt den Punkt nicht selbst, sondern fragt den Controller.
-    controller.handleInput(position) match
-      case Failure(error) =>
-        messageLabel.text_=(error.getMessage) // FIX: Scala 3 Setter-Syntax
+  private def playMove(input: String): Boolean =
+    val wasSuccessful =
+      controller.handleInput(input) match
+        case Failure(error) =>
+          messageLabel.text_=(error.getMessage)
+          false
 
-      case Success(_) =>
-        messageLabel.text_=("Stein gesetzt.") // FIX: Scala 3 Setter-Syntax
+        case Success(_) =>
+          if input.contains(" ") then
+            messageLabel.text_=("Stein bewegt.")
+          else
+            messageLabel.text_=("Stein gesetzt.")
+
+          true
 
     refresh()
+    wasSuccessful
 
   private def undoMove(): Unit =
-    // GUI benutzt Controller beim Klick auf Undo.
-    // GUI macht Undo nicht selbst, sondern fragt den Controller.
     controller.handleInput("undo") match
       case Failure(error) =>
-        messageLabel.text_=(error.getMessage) // FIX: Scala 3 Setter-Syntax
-
+        messageLabel.text_=(error.getMessage)
       case Success(_) =>
-        messageLabel.text_=("Zug rückgängig gemacht.") // FIX: Scala 3 Setter-Syntax
+        messageLabel.text_=("Zug rückgängig gemacht.")
 
     refresh()
 
   private def refresh(): Unit =
     boardPanel.repaint()
     turnPanel.repaint()
+    playerOneReservePanel.repaint()
+    playerTwoReservePanel.repaint()
 
-  // Wenn der Controller die Gui informiert, ruft er update auf.
   override def update(): Unit =
-    refresh()
+    Swing.onEDT:
+      refresh()
 
   private def openGui(startPanel: Component): Unit =
     Swing.onEDT:
@@ -235,19 +303,73 @@ object MillGui extends GameObserver:
 
     closed.await()
 
-  def startWith(sharedController: GameController): Unit =
-    controller = sharedController
-
-    // Gui bekommt hier den gemeinsamen Controller.
-    // Gui meldet sich beim Controller als Observer an.
+  def start(): Unit =
     controller.addObserver(this)
-
-    messageLabel.text_=("Klicke auf einen grünen Punkt.") // FIX: Scala 3 Setter-Syntax
     refresh()
-    openGui(gamePanel)
-
-  def main(args: Array[String]): Unit =
     openGui(mainMenuPanel)
+
+  private class StoneReservePanel(playerNumber: Int) extends Panel:
+
+    preferredSize = new Dimension(120, 460)
+    background = new Color(20, 70, 20)
+
+    private def stonesInHand: Int =
+      val viewModel =
+        controller.boardViewModel
+
+      if playerNumber == 1 then
+        viewModel.playerOneStonesInHand
+      else
+        viewModel.playerTwoStonesInHand
+
+    override def paintComponent(g: Graphics2D): Unit =
+      super.paintComponent(g)
+
+      g.setRenderingHint(
+        RenderingHints.KEY_ANTIALIASING,
+        RenderingHints.VALUE_ANTIALIAS_ON
+      )
+
+      g.setColor(new Color(15, 65, 15))
+      g.fillRoundRect(8, 8, size.width - 16, size.height - 16, 20, 20)
+
+      g.setColor(Color.WHITE)
+      g.setFont(new Font("Arial", Font.BOLD, 16))
+
+      val playerText =
+        if playerNumber == 1 then "Spieler 1" else "Spieler 2"
+
+      g.drawString(playerText, 20, 38)
+
+      g.setFont(new Font("Arial", Font.PLAIN, 15))
+      g.drawString(s"Rest: $stonesInHand", 28, 65)
+
+      val stoneSize =
+        36
+
+      (0 until stonesInHand).foreach: index =>
+        val column =
+          index % 2
+
+        val row =
+          index / 2
+
+        val x =
+          22 + column * 48
+
+        val y =
+          95 + row * 55
+
+        if playerNumber == 1 then
+          g.setColor(new Color(240, 230, 180))
+        else
+          g.setColor(new Color(20, 20, 20))
+
+        g.fillOval(x, y, stoneSize, stoneSize)
+
+        g.setColor(new Color(190, 190, 190))
+        g.setStroke(new BasicStroke(2))
+        g.drawOval(x, y, stoneSize, stoneSize)
 
   private class MillBoardPanel extends Panel:
 
@@ -256,6 +378,10 @@ object MillGui extends GameObserver:
 
     private var glowOn =
       true
+
+    // In der Bewegungsphase merkt sich die GUI den zuerst angeklickten eigenen Stein.
+    private var selectedPoint: Option[(Int, Int)] =
+      None
 
     private val points = Seq(
       (0, 0), (3, 0), (6, 0),
@@ -272,12 +398,65 @@ object MillGui extends GameObserver:
       repaint()
 
     def click(mouseX: Int, mouseY: Int): Unit =
-      freePointAt(mouseX, mouseY) match
-        case Some((gridX, gridY)) =>
-          playMove(GuiCoordinateMapper.toPosition(gridX, gridY))
+      pointAt(mouseX, mouseY) match
+        case None =>
+          messageLabel.text_=("Bitte auf einen Punkt des Spielbretts klicken.")
+
+        case Some(point) =>
+          if isPlacingPhase then
+            handlePlacingClick(point)
+          else
+            handleMovingClick(point)
+
+    private def isPlacingPhase: Boolean =
+      val viewModel =
+        controller.boardViewModel
+
+      viewModel.playerOneStonesInHand > 0 ||
+        viewModel.playerTwoStonesInHand > 0
+
+    private def handlePlacingClick(point: (Int, Int)): Unit =
+      if occupiedPoints.contains(point) then
+        messageLabel.text_=("Bitte auf einen freien grünen Punkt klicken.")
+      else
+        playMove(positionText(point))
+
+    private def handleMovingClick(point: (Int, Int)): Unit =
+      playerAt(point) match
+        case Some(playerNumber) if playerNumber == controller.boardViewModel.nextPlayerNumber =>
+          if selectedPoint.contains(point) then
+            selectedPoint = None
+            messageLabel.text_=("Auswahl aufgehoben.")
+          else
+            selectedPoint = Some(point)
+            messageLabel.text_=("Stein ausgewählt. Klicke nun auf ein freies Nachbarfeld.")
+
+          repaint()
+
+        case Some(_) =>
+          messageLabel.text_=("Bitte wähle einen eigenen Stein aus.")
 
         case None =>
-          messageLabel.text_=("Bitte auf einen freien grünen Punkt klicken.") // FIX: Scala 3 Setter-Syntax
+          selectedPoint match
+            case None =>
+              messageLabel.text_=("Wähle zuerst einen eigenen Stein aus.")
+
+            case Some(from) =>
+              val moveInput =
+                s"${positionText(from)} ${positionText(point)}"
+
+              if playMove(moveInput) then
+                selectedPoint = None
+
+              repaint()
+
+    private def positionText(point: (Int, Int)): String =
+      GuiCoordinateMapper.toPosition(point._1, point._2)
+
+    private def playerAt(point: (Int, Int)): Option[Int] =
+      controller.boardViewModel.stones.find: stone =>
+        (stone.col / 5, stone.row / 2) == point
+      .map(_.playerNumber)
 
     private def occupiedPoints: Set[(Int, Int)] =
       controller.boardViewModel.stones.map: stone =>
@@ -287,8 +466,8 @@ object MillGui extends GameObserver:
     private def freePoints: Seq[(Int, Int)] =
       points.filterNot(occupiedPoints.contains)
 
-    private def freePointAt(mouseX: Int, mouseY: Int): Option[(Int, Int)] =
-      freePoints.find: point =>
+    private def pointAt(mouseX: Int, mouseY: Int): Option[(Int, Int)] =
+      points.find: point =>
         val dx =
           mouseX - pixelX(point._1)
 
@@ -413,6 +592,16 @@ object MillGui extends GameObserver:
         g.setColor(new Color(60, 60, 60))
         g.setStroke(new BasicStroke(2))
         g.drawOval(x - stoneSize / 2, y - stoneSize / 2, stoneSize, stoneSize)
+
+        if selectedPoint.contains((gridX, gridY)) then
+          g.setColor(new Color(220, 40, 40))
+          g.setStroke(new BasicStroke(4))
+          g.drawOval(
+            x - stoneSize / 2 - 4,
+            y - stoneSize / 2 - 4,
+            stoneSize + 8,
+            stoneSize + 8
+          )
 
   private class TurnPanel extends Panel:
 

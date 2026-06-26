@@ -15,3 +15,6 @@ object GameMessages:
 
   def occupiedPosition: String =
     "Position occupied."
+
+  def invalidMove: String =
+    "Invalid move. Select one of your stones and a free neighbouring point."
