@@ -1,0 +1,9 @@
+target
+project/target
+.git
+.bsp
+.metals
+.idea
+.vscode
+*.zip
+*.iml
