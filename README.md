@@ -208,4 +208,6 @@ Mögliche zukünftige Erweiterungen:
 
 Software-Engineering-Projekt
 HTWG Konstanz
+Manuel Beinlich 
+Marin Corluka
 
