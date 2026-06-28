@@ -322,6 +322,8 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       ctrl.boardViewModel.stones should be(empty)
     }
 
+  }
+
     "trigger notifyObservers upon a successful undo execution" in {
       val ctrl = freshController
       val observer = RecordingObserver()
@@ -335,8 +337,6 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       observer.updateCalls should be(1)
     }
 
-  }
-
   "GameController.handleInput with 'undo'" should {
 
     "intercept the command 'undo' and route it internally to the undo logic" in {
@@ -347,6 +347,8 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
 
       ctrl.boardViewModel.stones should be(empty)
     }
+
+  }
 
   "GameController.undo edge cases" should {
     "return Failure when command.undo fails" in {
@@ -397,9 +399,8 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
           // der einen MoveCommand in der History hat
           // Einfachster Fix: handleInput mit gültigen Koordinaten
           pending
-      }
-
     }
 
   }
+
 }
