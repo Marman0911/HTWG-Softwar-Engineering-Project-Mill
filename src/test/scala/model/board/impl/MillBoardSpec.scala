@@ -1,4 +1,4 @@
-package model.board
+package model.board.impl
 
 import model.board.BoardComponent
 import model.board.Position
@@ -53,4 +53,27 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
 
       afterFirst.placeStone(pos, PlayerId.Two) should be(None)
     }
+
+    "count occupied positions with occupiedCount" in {
+  val board = BoardComponent.create()
+  board.occupiedCount should be(0)
+
+  val pos1 = Position(0, 0)
+  val pos2 = Position(0, 1)
+  val after1 = board.placeStone(pos1, PlayerId.One).get
+  after1.occupiedCount should be(1)
+
+  val after2 = after1.placeStone(pos2, PlayerId.Two).get
+  after2.occupiedCount should be(2)
   }
+
+"decrease occupiedCount after removing a stone" in {
+  val board = BoardComponent.create()
+  val pos = Position(0, 0)
+  val afterPlace = board.placeStone(pos, PlayerId.One).get
+  afterPlace.occupiedCount should be(1)
+
+  val afterRemove = afterPlace.removeStone(pos).get
+  afterRemove.occupiedCount should be(0)
+  }
+}
