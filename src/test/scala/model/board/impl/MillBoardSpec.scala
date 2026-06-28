@@ -55,25 +55,86 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
     }
 
     "count occupied positions with occupiedCount" in {
-  val board = BoardComponent.create()
-  board.occupiedCount should be(0)
+      val board = BoardComponent.create()
+      board.occupiedCount should be(0)
 
-  val pos1 = Position(0, 0)
-  val pos2 = Position(0, 1)
-  val after1 = board.placeStone(pos1, PlayerId.One).get
-  after1.occupiedCount should be(1)
+      val pos1 = Position(0, 0)
+      val pos2 = Position(0, 1)
+      val after1 = board.placeStone(pos1, PlayerId.One).get
+      after1.occupiedCount should be(1)
 
-  val after2 = after1.placeStone(pos2, PlayerId.Two).get
-  after2.occupiedCount should be(2)
+      val after2 = after1.placeStone(pos2, PlayerId.Two).get
+      after2.occupiedCount should be(2)
+      }
+
+    "decrease occupiedCount after removing a stone" in {
+      val board = BoardComponent.create()
+      val pos = Position(0, 0)
+      val afterPlace = board.placeStone(pos, PlayerId.One).get
+      afterPlace.occupiedCount should be(1)
+
+      val afterRemove = afterPlace.removeStone(pos).get
+      afterRemove.occupiedCount should be(0)
+      }
+
+    "move a stone to a free position" in {
+      val board = BoardComponent.create()
+      val from = Position(0, 0)
+      val to   = Position(0, 1)
+      val afterPlace = board.placeStone(from, PlayerId.One).get
+      val result = afterPlace.moveStone(from, to, PlayerId.One)
+      result shouldBe defined
+      result.get.placedStones.get(to) should be(Some(PlayerId.One))
+      result.get.placedStones.get(from) should be(None)
+    }
+
+    "return None when moving a stone that does not belong to the player" in {
+      val board = BoardComponent.create()
+      val from = Position(0, 0)
+      val to   = Position(0, 1)
+      val afterPlace = board.placeStone(from, PlayerId.One).get
+      afterPlace.moveStone(from, to, PlayerId.Two) should be(None)
+    }
+
+    "return None when moving to an occupied position" in {
+      val board = BoardComponent.create()
+      val from = Position(0, 0)
+      val to   = Position(0, 1)
+      val after1 = board.placeStone(from, PlayerId.One).get
+      val after2 = after1.placeStone(to, PlayerId.Two).get
+      after2.moveStone(from, to, PlayerId.One) should be(None)
+    }
+
+    "return neighbours for a valid position" in {
+      val board = BoardComponent.create()
+      val pos = Position(0, 1)
+      val neighbours = board.neighbours(pos)
+      neighbours should not be empty
+      neighbours should contain(Position(0, 0))
+      neighbours should contain(Position(0, 2))
+    }
+
+    "return inner ring neighbour for odd slot with ring > 0" in {
+      val board = BoardComponent.create()
+      val pos = Position(1, 1)
+      val neighbours = board.neighbours(pos)
+      neighbours should contain(Position(0, 1))
+    }
+
+    "return outer ring neighbour for odd slot with ring < boardSize - 1" in {
+      val board = BoardComponent.create()
+      val pos = Position(1, 1)
+      val neighbours = board.neighbours(pos)
+      neighbours should contain(Position(2, 1))
+    }
+
+    "return empty neighbours for invalid position" in {
+      val board = BoardComponent.create()
+      board.neighbours(Position(99, 99)) should be(empty)
+    }
+
+    "return None when removing from empty position" in {
+      val board = BoardComponent.create()
+      board.removeStone(Position(0, 0)) should be(None)
+    }
   }
-
-"decrease occupiedCount after removing a stone" in {
-  val board = BoardComponent.create()
-  val pos = Position(0, 0)
-  val afterPlace = board.placeStone(pos, PlayerId.One).get
-  afterPlace.occupiedCount should be(1)
-
-  val afterRemove = afterPlace.removeStone(pos).get
-  afterRemove.occupiedCount should be(0)
-  }
-}
