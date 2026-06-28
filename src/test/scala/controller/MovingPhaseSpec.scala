@@ -68,3 +68,11 @@ class MovingPhaseSpec extends AnyFlatSpec with Matchers:
       MovingPhase(successParsePos)
 
     phase.next(state) shouldBe phase
+
+  it should "should return the correct prompt for player two" in {
+    val state = GameState()
+    val afterP1 = state.placeStone(Position(0, 0)).get
+    // currentPlayer ist jetzt Two
+    val phase = MovingPhase((_,_) => None)
+    phase.prompt(afterP1) should include("Player 2")
+  }

@@ -137,4 +137,8 @@ class MillBoardSpec extends AnyWordSpec with Matchers:
       val board = BoardComponent.create()
       board.removeStone(Position(0, 0)) should be(None)
     }
+    "create a board using MillBoard default boardSize" in {
+      val board = model.board.impl.MillBoard()
+      board.boardSize should be(3)
+    }
   }

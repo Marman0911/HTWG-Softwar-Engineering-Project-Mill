@@ -94,4 +94,39 @@ class TuiRunnerSpec extends AnyWordSpec with Matchers:
 
       out.toString should include("Invalid position.")
     }
+    "print error message when undo fails on empty history" in {
+      val controller = GameController()
+      val inputs = Iterator("undo", "a1")
+      val runner = TuiRunner(
+        controller,
+        () =>
+          if inputs.hasNext then inputs.next()
+          else throw new RuntimeException("stop")
+      )
+      val out = new java.io.ByteArrayOutputStream()
+      an[RuntimeException] should be thrownBy {
+        Console.withOut(out) {
+          runner.run()
+        }
+      }
+      out.toString should include("Nothing to undo.")
+    }
+
+    "print success message after valid undo" in {
+      val controller = GameController()
+      val inputs = Iterator("a1", "undo", "a1")
+      val runner = TuiRunner(
+        controller,
+        () =>
+          if inputs.hasNext then inputs.next()
+          else throw new RuntimeException("stop")
+      )
+      val out = new java.io.ByteArrayOutputStream()
+      an[RuntimeException] should be thrownBy {
+        Console.withOut(out) {
+          runner.run()
+        }
+      }
+      controller.boardViewModel.stones should not be empty
+    }
   }
