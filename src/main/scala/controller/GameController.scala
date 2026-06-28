@@ -5,8 +5,6 @@ import model.board.Board
 import model.board.Position
 import controller.command.GameCommand
 import scala.util.{Try, Success, Failure}
-import com.google.inject.{AbstractModule, Guice, Inject}
-import net.codingwell.scalaguice.ScalaModule
 
 trait GameObserver:
   def update(): Unit
@@ -25,17 +23,16 @@ trait Observable:
 
 final case class GameException(message: String) extends Exception(message)
 
-class GameController @Inject() () extends IController:
+class GameController (initialState: GameState) extends IController:
 
-  private var state: GameState = GameState()
+  private var state: GameState = initialState
   private var history: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
-  def this(initalState: GameState) = 
+  /*def this(initialState: GameState) = 
     this()
-    state = initalState
-    phase = PlacingPhase(parseInput)
-  
+    state = initialState
+    phase = PlacingPhase(parseInput)*/
   def isGameOver: Boolean = !shouldContinue(state)
 
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
@@ -105,3 +102,7 @@ class GameController @Inject() () extends IController:
         case None => None
         case Some(rowNum) =>
           reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
+
+object GameController:
+  def apply(): GameController = new GameController(GameState())
+  def apply(state: GameState): GameController = new GameController(state)

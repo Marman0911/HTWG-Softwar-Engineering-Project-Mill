@@ -242,7 +242,7 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
         PlayerId.One
       )
 
-      val ctrl = GameController()
+      val ctrl = GameController(terminalState)
       val observer = RecordingObserver()
 
       ctrl.addObserver(observer)

@@ -20,5 +20,5 @@ import com.google.inject.Guice
   tuiThread.start()
 
   // 3. GUI ist jetzt eine Class und kriegt auch den IController
-  val gui = new MillGui(controller)
+  val gui = injector.getInstance(classOf[MillGui])
   gui.start()
