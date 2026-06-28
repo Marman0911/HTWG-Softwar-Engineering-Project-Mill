@@ -12,6 +12,8 @@ lazy val root = project
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.14" % "test",
     libraryDependencies += "org.scala-lang.modules" %% "scala-swing" % "3.0.0",
     libraryDependencies += "com.google.inject" % "guice" % "7.0.0",
+    libraryDependencies += "org.playframework" %% "play-json" % "3.0.4",
+    libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.4.0",
 
     Test / logBuffered := false,
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),

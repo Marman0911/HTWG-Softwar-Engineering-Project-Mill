@@ -12,3 +12,5 @@ trait IController extends Observable:
   def handleInput(input: String): Try[Unit]
   def welcomeMessage: String
   def undo(): Try[Unit]
+  def saveGame(customName: String): Try[Unit]
+  def loadGame(fileName: String): Try[Unit]

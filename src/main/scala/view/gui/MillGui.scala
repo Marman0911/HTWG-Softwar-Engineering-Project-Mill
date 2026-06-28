@@ -10,13 +10,6 @@ import java.util.concurrent.CountDownLatch
 import javax.swing.{Timer, WindowConstants}
 import com.google.inject.Inject
 
-/**
- * GUI-View für Mühle.
- *
- * Sie verwendet ausschließlich das IController-Interface und erzeugt
- * keinen eigenen Controller. Dadurch bleibt sie mit Guice und dem
- * gemeinsamen Controller von GUI und TUI kompatibel.
- */
 final class MillGui @Inject () (private val controller: IController) extends GameObserver:
 
   private val closed = CountDownLatch(1)
@@ -35,6 +28,8 @@ final class MillGui @Inject () (private val controller: IController) extends Gam
   private val playerVsAiButton = bigButton("Gegen KI spielen")
   private val aiVsAiButton = bigButton("KI gegen KI zuschauen")
   private val backToMenuButton = bigButton("Zurück")
+  private val loadGameButtonMenu = bigButton("Spiel laden")
+  private val saveButtonGame = new Button("Speichern")
 
   private val gameMenuButton = new Button("Menü")
   private val undoButtonGame = new Button("Undo")
@@ -66,9 +61,11 @@ final class MillGui @Inject () (private val controller: IController) extends Gam
     contents += new FlowPanel(new Label("Mühle"):
       font = new Font("Arial", Font.BOLD, 48)
     )
-    contents += Swing.VStrut(60)
+    contents += Swing.VStrut(40)
     contents += new FlowPanel(playButton)
-    contents += Swing.VStrut(20)
+    contents += Swing.VStrut(15)
+    contents += new FlowPanel(loadGameButtonMenu)
+    contents += Swing.VStrut(15)
     contents += new FlowPanel(quitButtonMenu)
 
   private val modeMenuPanel = new BoxPanel(Orientation.Vertical):
@@ -142,7 +139,7 @@ final class MillGui @Inject () (private val controller: IController) extends Gam
     contents += new FlowPanel(boardWithReservesPanel)
     contents += new FlowPanel(turnPanel)
     contents += new FlowPanel(messageLabel)
-    contents += new FlowPanel(gameMenuButton, undoButtonGame, quitButtonGame)
+    contents += new FlowPanel(gameMenuButton, undoButtonGame, saveButtonGame, quitButtonGame)
 
   private val frame = new MainFrame:
     title = "Mühle"
@@ -187,6 +184,36 @@ final class MillGui @Inject () (private val controller: IController) extends Gam
       showGameBoard()
   )
 
+  loadGameButtonMenu.peer.addActionListener(new ActionListener:
+    override def actionPerformed(e: ActionEvent): Unit =
+      val savesDir = new java.io.File("saves")
+      
+      val files = if savesDir.exists() && savesDir.isDirectory then
+        savesDir.listFiles().filter(f => f.isFile && (f.getName.endsWith(".json") || f.getName.endsWith(".xml"))).map(_.getName)
+      else
+        Array.empty[String]
+
+      if files.isEmpty then
+        javax.swing.JOptionPane.showMessageDialog(frame.peer, "Keine gespeicherten Spielstände im Ordner 'saves' gefunden!", "Laden nicht möglich", javax.swing.JOptionPane.INFORMATION_MESSAGE)
+      else
+        val selectedFile = javax.swing.JOptionPane.showInputDialog(
+          frame.peer,
+          "Wähle einen Spielstand aus:",
+          "Spiel laden",
+          javax.swing.JOptionPane.PLAIN_MESSAGE,
+          null,
+          files.asInstanceOf[Array[AnyRef]],
+          files(0)
+        )
+
+        if selectedFile != null then
+          controller.loadGame(selectedFile.toString) match
+            case Failure(error) =>
+              javax.swing.JOptionPane.showMessageDialog(frame.peer, s"Fehler beim Laden: ${error.getMessage}", "Fehler", javax.swing.JOptionPane.ERROR_MESSAGE)
+            case Success(_) =>
+              showGameBoard()
+  )
+
   startGameButton.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
       showGameBoard()
@@ -210,6 +237,24 @@ final class MillGui @Inject () (private val controller: IController) extends Gam
   undoButtonGame.peer.addActionListener(new ActionListener:
     override def actionPerformed(e: ActionEvent): Unit =
       undoMove()
+  )
+
+  saveButtonGame.peer.addActionListener(new ActionListener:
+    override def actionPerformed(e: ActionEvent): Unit =
+      val inputName = javax.swing.JOptionPane.showInputDialog(
+        frame.peer, 
+        "Bitte Namen für den Speicherstand eingeben (leer lassen für automatischen Namen):", 
+        "Spiel speichern", 
+        javax.swing.JOptionPane.QUESTION_MESSAGE
+      )
+      
+      if inputName != null then
+        controller.saveGame(inputName) match
+          case Failure(error) => 
+            messageLabel.text = s"Speichern fehlgeschlagen: ${error.getMessage}"
+          case Success(_) => 
+            messageLabel.text = "Spielstand erfolgreich im Ordner 'saves' gespeichert!"
+        refresh()
   )
 
   quitButtonGame.peer.addActionListener(new ActionListener:

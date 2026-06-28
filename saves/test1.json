@@ -1,0 +1,15 @@
+{
+  "currentPlayer" : "One",
+  "stonesInHand1" : 8,
+  "stonesInHand2" : 8,
+  "boardSize" : 3,
+  "stones" : [ {
+    "row" : 8,
+    "col" : 10,
+    "player" : "One"
+  }, {
+    "row" : 6,
+    "col" : 10,
+    "player" : "Two"
+  } ]
+}

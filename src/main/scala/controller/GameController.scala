@@ -5,6 +5,9 @@ import model.board.Board
 import model.board.Position
 import controller.command.GameCommand
 import scala.util.{Try, Success, Failure}
+import model.fileio.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 trait GameObserver:
   def update(): Unit
@@ -23,16 +26,12 @@ trait Observable:
 
 final case class GameException(message: String) extends Exception(message)
 
-class GameController (initialState: GameState) extends IController:
+class GameController (initialState: GameState, fileIO: FileIOInterface) extends IController:
 
   private var state: GameState = initialState
   private var history: List[GameCommand] = Nil
   private var phase: GamePhase = PlacingPhase(parseInput)
 
-  /*def this(initialState: GameState) = 
-    this()
-    state = initialState
-    phase = PlacingPhase(parseInput)*/
   def isGameOver: Boolean = !shouldContinue(state)
 
   def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
@@ -102,7 +101,34 @@ class GameController (initialState: GameState) extends IController:
         case None => None
         case Some(rowNum) =>
           reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
+  
+  def saveGame(customName: String): Try[Unit] =
+    val sanitized = customName.trim
+    val fileName = if sanitized.isEmpty then
+      val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"))
+      s"millbc_$timestamp"
+    else
+      sanitized
+
+    // Prüfen, welche Implementierung geladen ist, um die richtige Endung zu wählen
+    val extension = if fileIO.isInstanceOf[model.fileio.JsonFileIO] then ".json" else ".xml"
+    val filePath = s"saves/$fileName$extension"
+
+    // Wir übergeben das im Controller lebende 'state' an fileIO
+    scala.util.Try(fileIO.save(state, filePath))
+
+  def loadGame(fileName: String): Try[Unit] =
+    val filePath = s"saves/$fileName"
+    fileIO.load(filePath) match
+      case scala.util.Success(loadedState) =>
+        state = loadedState   // Den lokalen Zustand mit dem geladenen Zustand überschreiben
+        notifyObservers()     // WICHTIG: GUI und TUI Bescheid sagen, dass es neue Daten gibt!
+        scala.util.Success(())
+      case scala.util.Failure(exception) =>
+        System.err.println(s"Fehler beim Laden des Spielstands: ${exception.getMessage}")
+        scala.util.Failure(exception)
+    
 
 object GameController:
-  def apply(): GameController = new GameController(GameState())
-  def apply(state: GameState): GameController = new GameController(state)
+  def apply(): GameController = new GameController(GameState(), new JsonFileIO())
+  def apply(state: GameState): GameController = new GameController(state, new JsonFileIO())
