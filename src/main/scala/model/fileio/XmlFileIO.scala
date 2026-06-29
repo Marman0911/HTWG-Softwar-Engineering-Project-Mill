@@ -67,7 +67,15 @@ class XmlFileIO extends FileIOInterface:
           case Some(pos) => baseBoard = baseBoard.placeStone(pos, pId).getOrElse(baseBoard)
           case None =>
       
-      val p1 = PlayerComponent.create(PlayerId.One, stonesHand1)
-      val p2 = PlayerComponent.create(PlayerId.Two, stonesHand2)
+      val p1 = PlayerComponent.create(
+        PlayerId.One,
+        stonesInHand = stonesHand1,
+        stonesOnBoard = count1
+      )
+      val p2 = PlayerComponent.create(
+        PlayerId.Two,
+        stonesInHand = stonesHand2,
+        stonesOnBoard = count2
+      )
       
       GameComponent.create(baseBoard, p1, p2, currentPlayer)

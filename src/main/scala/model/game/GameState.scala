@@ -19,8 +19,15 @@ trait GameState:
 
   def placeStone(pos: Position): Option[GameState]
 
-  // Wird für Undo eines gesetzten Steins benutzt.
+  // Wird nur für Undo eines gesetzten Steins benutzt.
   def removeStone(pos: Position): Option[GameState]
+
+  // Entfernt nach einer Mühle einen gegnerischen Stein.
+  // Der entfernte Stein kommt nicht zurück in die Reserve.
+  def removeOpponentStone(pos: Position): Option[GameState]
+
+  // Wird nur für Undo eines entfernten gegnerischen Steins benutzt.
+  def restoreOpponentStone(pos: Position): Option[GameState]
 
   // Bewegt den Stein des aktuellen Spielers.
   def moveStone(from: Position, to: Position): Option[GameState]

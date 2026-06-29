@@ -307,12 +307,30 @@ final class MillGui @Inject () (private val controller: IController) extends Gam
         case Failure(error) =>
           messageLabel.text = error.getMessage
           false
-
+        
         case Success(_) =>
           if controller.isGameOver then
-            messageLabel.text = "Spiel vorbei."
+            val loser =
+            controller.boardViewModel.nextPlayerNumber
+
+            val winner =
+              if loser == 1 then 2 else 1
+
+            val endMessage =
+              s"Spiel vorbei!\n\nSpieler $winner hat gewonnen."
+
+            messageLabel.text =
+              s"Spiel vorbei. Spieler $winner gewinnt."
+
+            javax.swing.JOptionPane.showMessageDialog(
+              frame.peer,
+              endMessage,
+              "Spiel vorbei",
+              javax.swing.JOptionPane.INFORMATION_MESSAGE
+            )
 
           else if currentGuiAction == GuiAction.Remove then
+        
             messageLabel.text = "Mühle gebildet. Wähle einen gegnerischen Stein."
 
           else

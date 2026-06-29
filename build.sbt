@@ -18,5 +18,14 @@ lazy val root = project
     Test / logBuffered := false,
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oDF"),
 
-    coverageExcludedFiles := ".*Main.*;.*MillGui.*;.*MillApp.*"
+    coverageExcludedFiles := ".*Main.*;.*MillGui.*;.*MillApp.*",
+
+   strykerMutate := Seq(
+  "src/main/scala/**/*.scala",
+  "!src/main/scala/view/gui/MillGui.scala",
+  "!src/main/scala/app/MillApp.scala"
+)
+
   )
+
+  

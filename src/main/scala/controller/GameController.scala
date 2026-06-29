@@ -1,11 +1,11 @@
 package controller
 
-import model.game.GameState
-import model.board.Board
-import model.board.Position
-import controller.command.GameCommand
-import scala.util.{Try, Success, Failure}
+import controller.command.{GameCommand, MoveCommand, PlaceCommand, RemoveCommand}
+import model.board.{Board, Position}
 import model.fileio.*
+import model.game.{GameState, MillRules}
+
+import scala.util.{Failure, Success, Try}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -26,37 +26,79 @@ trait Observable:
 
 final case class GameException(message: String) extends Exception(message)
 
-class GameController (initialState: GameState, fileIO: FileIOInterface) extends IController:
+class GameController(initialState: GameState, fileIO: FileIOInterface) extends IController:
 
   private var state: GameState = initialState
   private var history: List[GameCommand] = Nil
-  private var phase: GamePhase = PlacingPhase(parseInput)
+  private var phase: GamePhase = phaseFor(initialState)
 
-  def isGameOver: Boolean = !shouldContinue(state)
+  private def phaseFor(gameState: GameState): GamePhase =
+    if gameState.player1.stonesInHand > 0 ||
+        gameState.player2.stonesInHand > 0 then
+      PlacingPhase(parseInput)
+    else
+      MovingPhase(parseInput)
 
-  def boardViewModel: BoardViewModel = BoardViewMapper.toViewModel(state)
+  def isGameOver: Boolean =
+    !shouldContinue(state)
 
-  def currentPrompt: String = phase.prompt(state)
+  def boardViewModel: BoardViewModel =
+    BoardViewMapper.toViewModel(state)
+
+  def currentPrompt: String =
+    phase.prompt(state)
 
   def handleInput(input: String): Try[Unit] =
     input.trim.toLowerCase match
-      case "undo" => undo()
+      case "undo" =>
+        undo()
+
       case _ =>
         phase.handleInput(input, state) match
-          // FIX: Aus Left(message) wird Failure(exception)
-          case Failure(exception) => 
+          case Failure(exception) =>
             Failure(GameException(exception.getMessage))
-          // FIX: Aus Right(command) wird Success(command)
+
           case Success(command: GameCommand) =>
+            val stateBeforeCommand =
+              state
+
             command.execute(state) match
-              case Failure(exception) => 
+              case Failure(exception) =>
                 Failure(exception)
+
               case Success(nextState) =>
                 history = command :: history
                 state = nextState
-                phase = phase.next(state)
+                phase =
+                  phaseAfter(command, stateBeforeCommand, nextState)
+
                 notifyObservers()
                 Success(())
+
+  private def phaseAfter(
+      command: GameCommand,
+      stateBeforeCommand: GameState,
+      stateAfterCommand: GameState
+  ): GamePhase =
+    command match
+      case PlaceCommand(pos)
+          if MillRules.formsMillAt(
+            stateAfterCommand.board,
+            pos,
+            stateBeforeCommand.currentPlayer
+          ) =>
+        new RemovingPhase(parseInput)
+
+      case MoveCommand(_, to)
+          if MillRules.formsMillAt(
+            stateAfterCommand.board,
+            to,
+            stateBeforeCommand.currentPlayer
+          ) =>
+        new RemovingPhase(parseInput)
+
+      case _ =>
+        phase.next(stateAfterCommand)
 
   def welcomeMessage: String =
     GameMessages.welcomeMessage
@@ -65,18 +107,26 @@ class GameController (initialState: GameState, fileIO: FileIOInterface) extends 
     history match
       case Nil =>
         Failure(GameException("Nothing to undo."))
+
       case command :: rest =>
         command.undo(state) match
-          case Failure(exception) => 
+          case Failure(exception) =>
             Failure(exception)
+
           case Success(prevState) =>
             state = prevState
             history = rest
+
             phase =
-              if state.player1.stonesInHand > 0 || state.player2.stonesInHand > 0 then
-                PlacingPhase(parseInput)
-              else
-                MovingPhase(parseInput)
+              command match
+                // Wenn das Entfernen rückgängig gemacht wird,
+                // darf derselbe Spieler wieder einen Stein entfernen.
+                case _: RemoveCommand =>
+                  new RemovingPhase(parseInput)
+
+                case _ =>
+                  phaseFor(state)
+
             notifyObservers()
             Success(())
 
@@ -87,7 +137,8 @@ class GameController (initialState: GameState, fileIO: FileIOInterface) extends 
     board.allPositions.map(pos => board.posCoords(pos) -> pos).toMap
 
   private[controller] def parseInput(input: String, board: Board): Option[Position] =
-    val clean = input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
+    val clean =
+      input.trim.toLowerCase.filter(c => c.isLetter || c.isDigit)
 
     if clean.length < 2 then None
     else
@@ -95,40 +146,61 @@ class GameController (initialState: GameState, fileIO: FileIOInterface) extends 
         if clean.head.isLetter then (clean.head, clean.tail)
         else (clean.last, clean.init)
 
-      val colIdx = letter - 'a'
+      val colIdx =
+        letter - 'a'
 
       number.toIntOption match
-        case None => None
+        case None =>
+          None
+
         case Some(rowNum) =>
           reverseCoords(board).get((rowNum - 1) * 2, colIdx * 5)
-  
+
   def saveGame(customName: String): Try[Unit] =
-    val sanitized = customName.trim
-    val fileName = if sanitized.isEmpty then
-      val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmm"))
-      s"millbc_$timestamp"
-    else
-      sanitized
+    val sanitized =
+      customName.trim
 
-    // Prüfen, welche Implementierung geladen ist, um die richtige Endung zu wählen
-    val extension = if fileIO.isInstanceOf[model.fileio.JsonFileIO] then ".json" else ".xml"
-    val filePath = s"saves/$fileName$extension"
+    val fileName =
+      if sanitized.isEmpty then
+        val timestamp =
+          LocalDateTime.now().format(
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
+          )
+        s"millbc_$timestamp"
+      else
+        sanitized
 
-    // Wir übergeben das im Controller lebende 'state' an fileIO
+    val extension =
+      if fileIO.isInstanceOf[model.fileio.JsonFileIO] then ".json" else ".xml"
+
+    val filePath =
+      s"saves/$fileName$extension"
+
     scala.util.Try(fileIO.save(state, filePath))
 
   def loadGame(fileName: String): Try[Unit] =
-    val filePath = s"saves/$fileName"
+    val filePath =
+      s"saves/$fileName"
+
     fileIO.load(filePath) match
       case scala.util.Success(loadedState) =>
-        state = loadedState   // Den lokalen Zustand mit dem geladenen Zustand überschreiben
-        notifyObservers()     // WICHTIG: GUI und TUI Bescheid sagen, dass es neue Daten gibt!
+        state = loadedState
+
+        phase =
+          phaseFor(state)
+
+        notifyObservers()
         scala.util.Success(())
+
       case scala.util.Failure(exception) =>
-        System.err.println(s"Fehler beim Laden des Spielstands: ${exception.getMessage}")
+        Console.err.println(
+          s"Fehler beim Laden des Spielstands: ${exception.getMessage}"
+        )
         scala.util.Failure(exception)
-    
 
 object GameController:
-  def apply(): GameController = new GameController(GameState(), new JsonFileIO())
-  def apply(state: GameState): GameController = new GameController(state, new JsonFileIO())
+  def apply(): GameController =
+    new GameController(GameState(), new JsonFileIO())
+
+  def apply(state: GameState): GameController =
+    new GameController(state, new JsonFileIO())
