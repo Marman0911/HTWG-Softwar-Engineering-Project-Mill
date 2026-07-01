@@ -229,6 +229,26 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       freshController.shouldContinue(state) should be(true)
     }
 
+    "be false when the current player can fly but the board has no free positions" in {
+      // P1: 3 Steine (canFly = true), P2: 5 Steine → alle 8 Positionen belegt → freePos.isEmpty
+      var b = BoardComponent.create(1)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 2), PlayerId.One).get
+      b = b.placeStone(Position(0, 4), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 3), PlayerId.Two).get
+      b = b.placeStone(Position(0, 5), PlayerId.Two).get
+      b = b.placeStone(Position(0, 6), PlayerId.Two).get
+      b = b.placeStone(Position(0, 7), PlayerId.Two).get
+
+      val flyingP1 = PlayerComponent.create(PlayerId.One, stonesInHand = 0, stonesOnBoard = 3)
+      val p2       = PlayerComponent.create(PlayerId.Two, stonesInHand = 0, stonesOnBoard = 5)
+
+      val state = GameComponent.create(b, flyingP1, p2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(false)
+    }
+
   }
 
   "GameController.reverseCoords" should {

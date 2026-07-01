@@ -10,7 +10,22 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import scala.util.{Failure, Success, Try}
 
+import model.player.Player
+
 class GameControllerAdvancedSpec extends AnyWordSpec with Matchers:
+
+  private final class UndoFailsOnMoveState(wrapped: GameState) extends GameState:
+    def board: Board                                              = wrapped.board
+    def player1: Player                                           = wrapped.player1
+    def player2: Player                                           = wrapped.player2
+    def currentPlayer: PlayerId                                   = wrapped.currentPlayer
+    def currentPlayerObj: Player                                  = wrapped.currentPlayerObj
+    def placeStone(pos: Position): Option[GameState]              = wrapped.placeStone(pos).map(new UndoFailsOnMoveState(_))
+    def removeStone(pos: Position): Option[GameState]             = wrapped.removeStone(pos).map(new UndoFailsOnMoveState(_))
+    def removeOpponentStone(pos: Position): Option[GameState]     = wrapped.removeOpponentStone(pos).map(new UndoFailsOnMoveState(_))
+    def restoreOpponentStone(pos: Position): Option[GameState]    = wrapped.restoreOpponentStone(pos).map(new UndoFailsOnMoveState(_))
+    def moveStone(from: Position, to: Position): Option[GameState] = wrapped.moveStone(from, to).map(new UndoFailsOnMoveState(_))
+    def undoMoveStone(from: Position, to: Position): Option[GameState] = None
 
   private class RecordingObserver extends GameObserver:
     var updateCalls: Int = 0
@@ -305,5 +320,61 @@ class GameControllerAdvancedSpec extends AnyWordSpec with Matchers:
       controller.boardViewModel.stones.exists(
         _.playerNumber == 2
       ) shouldBe true
+    }
+
+    "switch to RemovingPhase when a move forms a mill" in {
+      // P1 bewegt von Position(0,3)="g4" nach Position(0,2)="g1"
+      // → vervollständigt Mühle (0,0)-(0,1)-(0,2)
+      val movingMillState =
+        stateWith(
+          stones = Seq(
+            Position(0, 0) -> PlayerId.One,
+            Position(0, 1) -> PlayerId.One,
+            Position(0, 3) -> PlayerId.One,
+            Position(0, 5) -> PlayerId.One,
+            Position(1, 0) -> PlayerId.Two,
+            Position(1, 2) -> PlayerId.Two,
+            Position(1, 4) -> PlayerId.Two
+          ),
+          playerOneStonesInHand = 0,
+          playerTwoStonesInHand = 0,
+          currentPlayer = PlayerId.One
+        )
+
+      val controller =
+        new GameController(
+          movingMillState,
+          new RecordingFileIO(Success(movingMillState))
+        )
+
+      controller.handleInput("g4 g1") shouldBe Success(())
+      controller.currentPrompt shouldBe "Player 1 remove an opponent stone: "
+    }
+
+    "return Failure from undo when the command's undo itself fails" in {
+      val wrapped =
+        stateWith(
+          stones = Seq(
+            Position(0, 0) -> PlayerId.One,
+            Position(0, 2) -> PlayerId.One,
+            Position(0, 4) -> PlayerId.One,
+            Position(0, 6) -> PlayerId.One,
+            Position(1, 1) -> PlayerId.Two,
+            Position(1, 3) -> PlayerId.Two,
+            Position(1, 5) -> PlayerId.Two
+          ),
+          playerOneStonesInHand = 0,
+          playerTwoStonesInHand = 0,
+          currentPlayer = PlayerId.One
+        )
+
+      val failingState = new UndoFailsOnMoveState(wrapped)
+      val controller   = new GameController(failingState, new RecordingFileIO(Success(failingState)))
+
+      // Gültiger Zug von a1=Position(0,0) nach d1=Position(0,1)
+      controller.handleInput("a1 d1") shouldBe Success(())
+
+      // Undo schlägt fehl weil undoMoveStone None zurückgibt
+      controller.undo().isFailure shouldBe true
     }
   }
