@@ -99,4 +99,19 @@ class MillRulesSpec extends AnyWordSpec with Matchers:
 
       MillRules.removableOpponentPositions(board, PlayerId.One) shouldBe opponentMill
     }
+
+    "allow only opponent (Player One) stones outside a mill when Player Two is the current player" in {
+      val board =
+        boardWith(
+          Seq(
+            Position(0, 0) -> PlayerId.One,
+            Position(0, 1) -> PlayerId.One,
+            Position(0, 2) -> PlayerId.One,
+            Position(1, 0) -> PlayerId.One
+          )
+        )
+
+      MillRules.removableOpponentPositions(board, PlayerId.Two) shouldBe
+        Set(Position(1, 0))
+    }
   }

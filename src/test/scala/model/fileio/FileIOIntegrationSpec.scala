@@ -102,6 +102,26 @@ class FileIOIntegrationSpec extends AnyWordSpec with Matchers:
       finally
         deleteRecursively(directory)
     }
+
+    "silently skip a stone whose coordinates match no board position" in {
+      val directory =
+        Files.createTempDirectory("mill-json-invalid-coord").toFile
+
+      try
+        val file = new File(directory, "invalid.json")
+        val content =
+          """{"currentPlayer":"One","stonesInHand1":8,"stonesInHand2":9,"""
+            + "\"boardSize\":3,\"stones\":[{\"row\":999,\"col\":999,\"player\":\"One\"}]}"
+        val pw = new java.io.PrintWriter(file)
+        pw.write(content)
+        pw.close()
+
+        val result = new JsonFileIO().load(file.getPath)
+        result.isSuccess shouldBe true
+        result.get.board.placedStones shouldBe empty
+      finally
+        deleteRecursively(directory)
+    }
   }
 
   "XmlFileIO" should {
@@ -140,6 +160,29 @@ class FileIOIntegrationSpec extends AnyWordSpec with Matchers:
       try
         val fileIO = new XmlFileIO
         fileIO.load(new File(directory, "missing.xml").getPath).isFailure shouldBe true
+      finally
+        deleteRecursively(directory)
+    }
+
+    "silently skip a stone whose coordinates match no board position" in {
+      val directory =
+        Files.createTempDirectory("mill-xml-invalid-coord").toFile
+
+      try
+        val file = new File(directory, "invalid.xml")
+        val content =
+          "<game><currentPlayer>One</currentPlayer>" +
+          "<stonesInHand1>8</stonesInHand1><stonesInHand2>9</stonesInHand2>" +
+          "<boardSize>3</boardSize><board>" +
+          "<stone><row>999</row><col>999</col><player>One</player></stone>" +
+          "</board></game>"
+        val pw = new java.io.PrintWriter(file)
+        pw.write(content)
+        pw.close()
+
+        val result = new XmlFileIO().load(file.getPath)
+        result.isSuccess shouldBe true
+        result.get.board.placedStones shouldBe empty
       finally
         deleteRecursively(directory)
     }
