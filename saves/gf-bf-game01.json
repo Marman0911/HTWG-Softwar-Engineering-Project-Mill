@@ -1,0 +1,71 @@
+{
+  "currentPlayer" : "One",
+  "stonesInHand1" : 0,
+  "stonesInHand2" : 0,
+  "boardSize" : 3,
+  "stones" : [ {
+    "row" : 4,
+    "col" : 20,
+    "player" : "Two"
+  }, {
+    "row" : 6,
+    "col" : 20,
+    "player" : "Two"
+  }, {
+    "row" : 6,
+    "col" : 30,
+    "player" : "Two"
+  }, {
+    "row" : 10,
+    "col" : 25,
+    "player" : "Two"
+  }, {
+    "row" : 2,
+    "col" : 5,
+    "player" : "One"
+  }, {
+    "row" : 6,
+    "col" : 5,
+    "player" : "One"
+  }, {
+    "row" : 12,
+    "col" : 15,
+    "player" : "Two"
+  }, {
+    "row" : 10,
+    "col" : 15,
+    "player" : "One"
+  }, {
+    "row" : 0,
+    "col" : 30,
+    "player" : "One"
+  }, {
+    "row" : 6,
+    "col" : 25,
+    "player" : "One"
+  }, {
+    "row" : 0,
+    "col" : 0,
+    "player" : "Two"
+  }, {
+    "row" : 10,
+    "col" : 5,
+    "player" : "One"
+  }, {
+    "row" : 12,
+    "col" : 30,
+    "player" : "One"
+  }, {
+    "row" : 12,
+    "col" : 0,
+    "player" : "One"
+  }, {
+    "row" : 8,
+    "col" : 20,
+    "player" : "Two"
+  }, {
+    "row" : 2,
+    "col" : 15,
+    "player" : "Two"
+  } ]
+}

@@ -131,7 +131,23 @@ class GameController(initialState: GameState, fileIO: FileIOInterface) extends I
             Success(())
 
   private[controller] def shouldContinue(state: GameState): Boolean =
-    !state.player1.hasLost && !state.player2.hasLost
+    !state.player1.hasLost && !state.player2.hasLost &&
+      !currentPlayerIsBlocked(state)
+
+  private def currentPlayerIsBlocked(state: GameState): Boolean =
+    val inMovePhase =
+      state.player1.stonesInHand == 0 && state.player2.stonesInHand == 0
+    if !inMovePhase then return false
+
+    val board       = state.board
+    val currentId   = state.currentPlayer
+    val myPositions = board.placedStones.collect { case (pos, id) if id == currentId => pos }
+    val freePos     = board.allPositions.filterNot(board.placedStones.contains)
+
+    if state.currentPlayerObj.canFly then
+      freePos.isEmpty
+    else
+      !myPositions.exists(pos => board.neighbours(pos).exists(n => !board.placedStones.contains(n)))
 
   private[controller] def reverseCoords(board: Board): Map[(Int, Int), Position] =
     board.allPositions.map(pos => board.posCoords(pos) -> pos).toMap

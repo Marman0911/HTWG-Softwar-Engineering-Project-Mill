@@ -174,6 +174,61 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       freshController.shouldContinue(state) should be(false)
     }
 
+    "be false when current player cannot move any stone in the move phase" in {
+      // 1-Ring-Board: P1 auf geraden, P2 auf ungeraden Positionen → alle Felder belegt
+      var b = BoardComponent.create(1)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 2), PlayerId.One).get
+      b = b.placeStone(Position(0, 4), PlayerId.One).get
+      b = b.placeStone(Position(0, 6), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 3), PlayerId.Two).get
+      b = b.placeStone(Position(0, 5), PlayerId.Two).get
+      b = b.placeStone(Position(0, 7), PlayerId.Two).get
+
+      val blockedP1 = PlayerComponent.create(PlayerId.One, stonesInHand = 0, stonesOnBoard = 4)
+      val activeP2  = PlayerComponent.create(PlayerId.Two, stonesInHand = 0, stonesOnBoard = 4)
+
+      val state = GameComponent.create(b, blockedP1, activeP2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(false)
+    }
+
+    "be true when current player still has a valid move in the move phase" in {
+      // P1 hat einen Stein mit freiem Nachbarn
+      var b = BoardComponent.create(1)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 2), PlayerId.One).get
+      b = b.placeStone(Position(0, 4), PlayerId.One).get
+      b = b.placeStone(Position(0, 6), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 3), PlayerId.Two).get
+      b = b.placeStone(Position(0, 5), PlayerId.Two).get
+      // (0,7) bleibt frei → P1 bei (0,6) hat (0,7) als freien Nachbarn
+
+      val p1 = PlayerComponent.create(PlayerId.One, stonesInHand = 0, stonesOnBoard = 4)
+      val p2 = PlayerComponent.create(PlayerId.Two, stonesInHand = 0, stonesOnBoard = 3)
+
+      val state = GameComponent.create(b, p1, p2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(true)
+    }
+
+    "be true when blocked configuration exists but still in placing phase" in {
+      // stonesInHand > 0 → noch in der Setzphase, Blockier-Check greift nicht
+      var b = BoardComponent.create(1)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 7), PlayerId.Two).get
+
+      val p1 = PlayerComponent.create(PlayerId.One, stonesInHand = 5, stonesOnBoard = 1)
+      val p2 = PlayerComponent.create(PlayerId.Two, stonesInHand = 5, stonesOnBoard = 2)
+
+      val state = GameComponent.create(b, p1, p2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(true)
+    }
+
   }
 
   "GameController.reverseCoords" should {
