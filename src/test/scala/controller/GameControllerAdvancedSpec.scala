@@ -351,6 +351,36 @@ class GameControllerAdvancedSpec extends AnyWordSpec with Matchers:
       controller.currentPrompt shouldBe "Player 1 remove an opponent stone: "
     }
 
+    "stay in MovingPhase after a move that does not form a mill" in {
+      // P1 bewegt a4=Position(0,7) → b4=Position(1,7): gültiger Cross-Ring-Nachbar, keine Mühle
+      // → Phase bleibt MovingPhase, Prompt zeigt Spieler 2
+      val movingState =
+        stateWith(
+          stones = Seq(
+            Position(0, 7) -> PlayerId.One,
+            Position(0, 2) -> PlayerId.One,
+            Position(0, 4) -> PlayerId.One,
+            Position(0, 6) -> PlayerId.One,
+            Position(1, 2) -> PlayerId.Two,
+            Position(1, 4) -> PlayerId.Two,
+            Position(1, 6) -> PlayerId.Two
+          ),
+          playerOneStonesInHand = 0,
+          playerTwoStonesInHand = 0,
+          currentPlayer = PlayerId.One
+        )
+
+      val controller =
+        new GameController(
+          movingState,
+          new RecordingFileIO(Success(movingState))
+        )
+
+      // a4=Position(0,7) → b4=Position(1,7): Slot 7 ist odd → Cross-Ring-Nachbar, keine Mühle
+      controller.handleInput("a4 b4") shouldBe Success(())
+      controller.currentPrompt shouldBe "Player 2 move: start target (e.g. a1 d1): "
+    }
+
     "return Failure from undo when the command's undo itself fails" in {
       val wrapped =
         stateWith(

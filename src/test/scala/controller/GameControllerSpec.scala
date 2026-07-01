@@ -249,6 +249,70 @@ class GameControllerSpec extends AnyWordSpec with Matchers {
       freshController.shouldContinue(state) should be(false)
     }
 
+    // --- Mutant 48: && → || in inMovePhase ---
+    "be true when only the current player has no stones in hand (opponent still placing)" in {
+      // P1: stonesInHand=0, P2: stonesInHand=3 → Setzphase (P2 hat noch Steine)
+      // P1 wäre blockiert, aber Blockier-Check darf hier nicht greifen
+      var b = BoardComponent.create(3)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 2), PlayerId.One).get
+      b = b.placeStone(Position(0, 4), PlayerId.One).get
+      b = b.placeStone(Position(0, 6), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 3), PlayerId.Two).get
+      b = b.placeStone(Position(0, 5), PlayerId.Two).get
+      b = b.placeStone(Position(0, 7), PlayerId.Two).get
+
+      val p1 = PlayerComponent.create(PlayerId.One, stonesInHand = 0, stonesOnBoard = 4)
+      val p2 = PlayerComponent.create(PlayerId.Two, stonesInHand = 3, stonesOnBoard = 4)
+
+      val state = GameComponent.create(b, p1, p2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(true)
+    }
+
+    // --- Mutant 60: canFly → true ---
+    "be false when the non-flying player has no free-neighbour moves despite free board positions" in {
+      // 3-Ring-Board: P1 (4 Steine, kein canFly) auf Ring-0-Geraden, P2 blockiert Ring-0-Ungeraden
+      // Ringe 1 und 2 frei → freePos nicht leer, aber Nachbarn alle belegt
+      var b = BoardComponent.create(3)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 2), PlayerId.One).get
+      b = b.placeStone(Position(0, 4), PlayerId.One).get
+      b = b.placeStone(Position(0, 6), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 3), PlayerId.Two).get
+      b = b.placeStone(Position(0, 5), PlayerId.Two).get
+      b = b.placeStone(Position(0, 7), PlayerId.Two).get
+
+      val blockedP1 = PlayerComponent.create(PlayerId.One, stonesInHand = 0, stonesOnBoard = 4)
+      val p2        = PlayerComponent.create(PlayerId.Two, stonesInHand = 0, stonesOnBoard = 4)
+
+      val state = GameComponent.create(b, blockedP1, p2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(false)
+    }
+
+    // --- Mutant 61: canFly → false ---
+    "be true when the flying player has all ring neighbours blocked but free positions exist" in {
+      // P1: 3 Steine (canFly), Ring-0-Nachbarn alle durch P2 belegt, Ringe 1+2 frei
+      var b = BoardComponent.create(3)
+      b = b.placeStone(Position(0, 0), PlayerId.One).get
+      b = b.placeStone(Position(0, 2), PlayerId.One).get
+      b = b.placeStone(Position(0, 4), PlayerId.One).get
+      b = b.placeStone(Position(0, 1), PlayerId.Two).get
+      b = b.placeStone(Position(0, 3), PlayerId.Two).get
+      b = b.placeStone(Position(0, 5), PlayerId.Two).get
+      b = b.placeStone(Position(0, 7), PlayerId.Two).get
+
+      val flyingP1 = PlayerComponent.create(PlayerId.One, stonesInHand = 0, stonesOnBoard = 3)
+      val p2       = PlayerComponent.create(PlayerId.Two, stonesInHand = 0, stonesOnBoard = 4)
+
+      val state = GameComponent.create(b, flyingP1, p2, PlayerId.One)
+
+      freshController.shouldContinue(state) should be(true)
+    }
+
   }
 
   "GameController.reverseCoords" should {
