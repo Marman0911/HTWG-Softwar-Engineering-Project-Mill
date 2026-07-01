@@ -1,5 +1,7 @@
 # Mühle – Nine Men's Morris
 
+[![Coverage Status](https://coveralls.io/repos/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill/badge.svg?branch=main)](https://coveralls.io/github/Marman0911/HTWG-Softwar-Engineering-Project-Mill?branch=main)
+
 Dieses Projekt ist eine Umsetzung des Brettspiels **Mühle (Nine Men's Morris)** in **Scala 3**.
 
 Das Spiel wurde im Rahmen des Software-Engineering-Projekts an der HTWG Konstanz entwickelt. Es besitzt eine grafische Benutzeroberfläche, eine textbasierte Terminalansicht sowie eine klare Trennung zwischen Modell, Steuerung und Darstellung.
